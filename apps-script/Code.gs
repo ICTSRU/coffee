@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v1.9
+ * Coffee with IT — Booking System  ·  v2.0
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.9';
+const APP_VERSION = '2.0';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
@@ -751,23 +751,28 @@ function reminderHtml_(b, s) {
 }
 
 function thanksHtml_(b, s) {
+  // Outlook for Windows (Word engine) ignores display:block, borders and radius on <a>/<span>, so each choice is a
+  // fixed-size table cell carrying the border and background; only the text inside is linked. Order 1 → 5 from the right.
+  const nb = t => esc_(t);  // labels may wrap on phones; the fixed cell height keeps all five boxes equal
   const cells = RATE_LABELS.map((l, i) => {
-    const n = i + 1, link = rateLink_(s, b.id, n);
-    return '<td align="center" valign="top" width="20%" style="padding:0 3px">' +
-      '<a href="' + esc_(link) + '" target="_blank" style="display:block;text-decoration:none;border:2px solid ' + C.purple + ';border-radius:8px;' +
-        'background:' + (n >= 4 ? C.light : '#ffffff') + ';color:' + C.dark + ';font-family:' + FONT + ';padding:10px 0 8px">' +
-        '<span style="display:block;font-size:24px;font-weight:bold;line-height:1.2">' + n + '</span>' +
-        '<span style="display:block;font-size:11px;line-height:1.4;color:' + C.muted + '">' + esc_(l[0]) + '</span>' +
-        '<span style="display:block;font-size:10px;line-height:1.3;color:' + C.muted + '">' + esc_(l[1]) + '</span></a></td>';
+    const n = i + 1, link = esc_(rateLink_(s, b.id, n)), bg = n >= 4 ? C.light : '#ffffff';
+    const a = (txt, css) => '<a href="' + link + '" target="_blank" style="text-decoration:none;font-family:' + FONT + ';' + css + '">' + txt + '</a>';
+    return '<td width="20%" valign="top" style="padding:0 3px">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + bg + '" style="border:2px solid ' + C.purple + ';border-radius:8px;background:' + bg + '">' +
+      '<tr><td align="center" valign="middle" height="92" style="height:92px;padding:6px 2px;text-align:center;line-height:14px">' +
+        a(String(n), 'color:' + C.dark + ';font-size:24px;line-height:28px;font-weight:bold') + '<br>' +
+        a(nb(l[0]), 'color:' + C.muted + ';font-size:11px;line-height:16px') + '<br>' +
+        a(nb(l[1]), 'color:' + C.muted + ';font-size:10px;line-height:14px') +
+      '</td></tr></table></td>';
   }).join('');
   const body =
     p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
-    p_('شكرًا لحضورك جلسة <b>Coffee with IT</b>' + (b.topic ? ' حول <b>' + esc_(b.topic) + '</b>' : '') + '. يهمنا رأيك لتطوير جلساتنا القادمة، ولن يستغرق التقييم أكثر من دقيقة.') +
+    p_('شكرًا لحضورك جلسة <b>Coffee&nbsp;with&nbsp;IT</b>' + (b.topic ? ' حول <b>' + keepLatin_(esc_(b.topic)) + '</b>' : '') + '. يهمنا رأيك لتطوير جلساتنا القادمة، ولن يستغرق التقييم أكثر من دقيقة.') +
     '<div dir="ltr" style="text-align:left;color:' + C.muted + ';font-size:13px;margin:0 0 16px">Thank you for attending. Your feedback helps us improve — it takes less than a minute.</div>' +
     '<div style="border-top:1px solid ' + C.line + ';padding-top:16px;text-align:center">' +
       '<div style="font-weight:bold;font-size:17px;color:' + C.dark + '">' + RATE_Q_AR + '</div>' +
       '<div dir="ltr" style="font-size:13px;color:' + C.muted + ';margin-bottom:12px">' + RATE_Q_EN + '</div>' +
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="ltr"><tr>' + cells + '</tr></table>' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="direction:rtl;table-layout:fixed"><tr>' + cells + '</tr></table>' +
       '<div style="font-size:13px;color:' + C.muted + ';margin-top:12px">اضغط على رقم للتقييم، ثم يمكنك كتابة مقترحاتك · Tap a number, then add your suggestions</div>' +
     '</div>' +
     detailsCard_([
@@ -801,11 +806,12 @@ function layout_(o) {
       '<tr><td style="background:' + o.accent + ';padding:26px 28px 24px;font-family:' + FONT + ';color:#ffffff;text-align:right">' +
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
           '<td valign="middle" style="padding-left:10px"><img src="' + ASSET_URL + 'cwit-mark-white.png" alt="Coffee with IT" width="40" height="40" style="display:block;width:40px;height:40px;border:0"></td>' +
-          '<td valign="middle"><span style="display:inline-block;background:rgba(255,255,255,0.18);border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold;direction:ltr">Coffee with IT · 10 min</span></td>' +
+          '<td valign="middle"><span style="display:inline-block;background:#6c3fa8;border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold;direction:ltr">Coffee with IT · 10 min</span></td>' +
         '</tr></table>' +
-        '<div style="font-size:26px;line-height:1.4;font-weight:bold;margin-top:12px">' +
-          '<span style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:#ffffff;color:' + o.accent + ';border-radius:50%;font-size:18px;margin-left:8px;vertical-align:middle">' + o.icon + '</span>' +
-          esc_(o.title) + '</div>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px"><tr>' +
+          '<td width="34" height="34" align="center" valign="middle" bgcolor="#ffffff" style="width:34px;height:34px;background:#ffffff;border-radius:17px;color:' + o.accent + ';font-size:18px;line-height:34px;font-weight:bold;text-align:center">' + o.icon + '</td>' +
+          '<td valign="middle" style="padding-right:10px;font-family:' + FONT + ';font-size:26px;line-height:36px;font-weight:bold;color:#ffffff">' + esc_(o.title) + '</td>' +
+        '</tr></table>' +
         '<div style="font-size:15px;margin-top:4px;opacity:0.92">' + esc_(o.subtitle) + '</div>' +
       '</td></tr>' +
       '<tr><td style="height:5px;line-height:5px;font-size:0;background:' + C.blue + '">&nbsp;</td></tr>' +
@@ -826,6 +832,9 @@ function layout_(o) {
       'الإدارة التنفيذية للاتصالات وتقنية المعلومات — جامعة سليمان الراجحي</div>' +
     '</td></tr></table></body></html>';
 }
+
+/** Joins consecutive Latin words with non-breaking spaces so "Read AI" never splits across lines in Arabic text. */
+function keepLatin_(t) { return String(t).replace(/([A-Za-z0-9][\w.\-]*)(?: +(?=[A-Za-z0-9]))/g, '$1&nbsp;'); }
 
 function p_(html) { return '<p style="margin:0 0 12px">' + html + '</p>'; }
 
@@ -879,7 +888,7 @@ function ltr_(text) { return '\u202A' + text + '\u202C'; }
 
 /** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */
 function timeRange_(b) {
-  return 'من <span dir="ltr">' + ltr_(esc_(b.time)) + '</span> إلى <span dir="ltr">' + ltr_(esc_(b.endTime)) + '</span>';
+  return 'من&nbsp;<span dir="ltr">' + ltr_(esc_(b.time)) + '</span>&nbsp;إلى&nbsp;<span dir="ltr">' + ltr_(esc_(b.endTime)) + '</span>';
 }
 
 function button_(text, href, color) {

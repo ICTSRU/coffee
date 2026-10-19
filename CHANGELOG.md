@@ -1,5 +1,12 @@
 # Changelog — Coffee with IT
 
+## v2.0 — 2026-10-19
+- **Rating e-mail fixed for Outlook for Windows**: the 1–5 choices broke into scattered boxes because Outlook ignores `display:block`,
+  borders and radius on links. Each choice is now a fixed-size table cell carrying the border and background; all five are equal width and height.
+- Rating scale reads 1 → 5 from the right in the e-mail and on the rating page (consistent in every client).
+- Hero (all e-mails): solid "Coffee with IT · 10 min" badge (Outlook ignored the translucent one) and the icon circle is now a table cell.
+- Time range keeps its spaces («من 10:00 إلى 10:10»); English phrases in the topic such as "Read AI" no longer split across lines.
+
 ## v1.9 — 2026-10-19
 - **Thank-you + rating e-mail after each session**, following the Event Attendance platform's model: one overall-satisfaction question on a
   5-point scale (bilingual labels) with clickable 1–5 buttons, then an open suggestions question on the rating page.
