@@ -1,5 +1,11 @@
 # Changelog — Coffee with IT
 
+## v1.7 — 2026-10-19
+- Remote (Zoom) bookings: the confirmation and reminder e-mails include the Zoom meeting link
+  (a "انضم إلى الجلسة عبر Zoom" button, the meeting ID and the full link). The link is also added to the calendar invite.
+- The link comes from Settings › ZoomLink. If that cell is empty or still holds the placeholder, the built-in meeting
+  (ID 813 3519 1824) is used.
+
 ## v1.6 — 2026-10-19
 - Every booking e-mail (confirmation, cancellation, reminder) is now blind-copied (BCC) to **servicedesk@sr.edu.sa and m.elmahdy@sr.edu.sa**.
   Settings › NotifyEmail accepts several addresses (separated by `;` or `,`). Duplicates and the attendee's own address are removed automatically.

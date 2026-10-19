@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v1.6
+ * Coffee with IT — Booking System  ·  v1.7
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics' };
 
@@ -16,6 +16,8 @@ const BOOKING_HEADERS = ['BookingId', 'Timestamp', 'Email', 'Name', 'Department'
 const COL = BOOKING_HEADERS.reduce((o, h, i) => (o[h] = i, o), {});
 
 const MODE_LABEL = { onsite: 'حضوري', zoom: 'عن بُعد (Zoom)' };
+// Zoom meeting used for remote sessions when Settings › ZoomLink is empty or not a valid link.
+const DEFAULT_ZOOM_LINK = 'https://us06web.zoom.us/j/81335191824?pwd=Va9wQ6Yyz0NPaOjubMJBaxhqcUd7AR.1';
 const DEFAULT_ADMINS = ['m.elmahdy@sr.edu.sa'];   // extra admins: Settings › AdminEmails (comma-separated)
 const ATTENDANCE = { Attended: 'حضر', 'No-show': 'لم يحضر' };
 
@@ -83,7 +85,7 @@ function book(payload) {
   }
 
   const sessionMin = Number(s.SessionMinutes) || 10;
-  const where = mode === 'zoom' ? String(s.ZoomLink || '') : String(s.OnsiteLocation || '');
+  const where = mode === 'zoom' ? zoomLink_(s) : String(s.OnsiteLocation || '');
   let result;
 
   const lock = LockService.getScriptLock();
@@ -116,7 +118,7 @@ function book(payload) {
           description: 'جلسة Coffee with IT (' + sessionMin + ' دقائق)\n' +
             'الموضوع: ' + (topic || s.Topic || '') + '\n' +
             'طريقة الحضور: ' + MODE_LABEL[mode] + '\n' +
-            'رقم الحجز: ' + id + (notes ? '\nملاحظات: ' + notes : '')
+            'رقم الحجز: ' + id + (mode === 'zoom' ? '\nرابط Zoom: ' + where : '') + (notes ? '\nملاحظات: ' + notes : '')
         });
         eventId = ev.getId();
       } catch (err) {
@@ -325,7 +327,7 @@ function setup() {
     ['CapacityPerSlot', '1', 'عدد الحجوزات المسموح بها لكل موعد'],
     ['MaxActiveBookingsPerUser', '1', 'عدد الحجوزات القائمة المسموح بها لكل موظف'],
     ['OnsiteLocation', 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]', 'مكان الجلسة الحضورية'],
-    ['ZoomLink', '[ضع رابط اجتماع Zoom هنا]', 'يُرسل في البريد لمن يختار الحضور عن بُعد'],
+    ['ZoomLink', DEFAULT_ZOOM_LINK, 'يُرسل في البريد لمن يختار الحضور عن بُعد'],
     ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
     ['CreateCalendarEvents', 'TRUE', 'إنشاء موعد في التقويم ودعوة الموظف'],
     ['CalendarId', 'primary', 'معرّف التقويم أو primary'],
@@ -482,7 +484,7 @@ function sendReminderMail_(r, s) {
   const zoom = r[COL.Mode] === MODE_LABEL.zoom;
   const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], topic: r[COL.Topic] || '',
     mode: zoom ? 'zoom' : 'onsite', modeLabel: r[COL.Mode],
-    where: zoom ? String(s.ZoomLink || '') : String(s.OnsiteLocation || ''),
+    where: zoom ? zoomLink_(s) : String(s.OnsiteLocation || ''),
     endTime: addMinutes_(r[COL.Time], Number(s.SessionMinutes) || 10) };
   send_(r[COL.Email], '⏰ تذكير: جلسة Coffee with IT اليوم الساعة ' + b.time, reminderHtml_(b, s), s);
 }
@@ -509,7 +511,7 @@ function confirmationHtml_(b, s) {
     '<div style="margin:22px 0 6px;font-weight:bold;color:' + C.dark + '">قبل الجلسة</div>' +
     '<ul style="margin:0;padding:0 18px 0 0;color:' + C.ink + '">' +
       (b.mode === 'zoom'
-        ? '<li>تأكد من تثبيت تطبيق Zoom وتجربة الصوت مسبقًا.</li><li>ادخل إلى الاجتماع من الدعوة قبل الموعد بدقيقتين.</li>'
+        ? '<li>تأكد من تثبيت تطبيق Zoom وتجربة الصوت مسبقًا.</li><li>ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.</li>'
         : '<li>نرجو الحضور قبل الموعد بدقيقتين.</li><li>يمكنك إحضار جهازك المحمول لتطبيق الإعدادات مباشرة.</li>') +
     '</ul>' +
     '<div style="margin:24px 0 0;border-top:1px solid ' + C.line + ';padding-top:18px">' +
@@ -614,12 +616,33 @@ function modePill_(mode, label) {
 
 function whereBlock_(b) {
   if (b.mode === 'zoom') {
-    return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px;font-weight:bold;color:#08537f">' +
-      '🎥 سيتم إرسال دعوة اجتماع Zoom</div>';
+    const link = /^https?:\/\//i.test(b.where || '') ? b.where : DEFAULT_ZOOM_LINK;
+    const id = zoomMeetingId_(link);
+    return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
+      '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">🎥 رابط اجتماع Zoom</div>' +
+      button_('انضم إلى الجلسة عبر Zoom', link, C.blue) +
+      (id ? '<div style="margin-top:10px;font-size:14px;color:' + C.ink + '">رقم الاجتماع: <b dir="ltr" style="font-family:Consolas,Menlo,monospace">' + esc_(id) + '</b></div>' : '') +
+      '<div style="font-size:12px;color:' + C.muted + ';margin-top:6px;direction:ltr;text-align:left;word-break:break-all">' +
+        '<a href="' + esc_(link) + '" style="color:' + C.muted + '">' + esc_(link) + '</a></div>' +
+      '</div>';
   }
   return '<div style="background:' + C.light + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
     '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">📍 مكان الجلسة</div>' +
     '<div>' + esc_(b.where || '') + '</div></div>';
+}
+
+/** Settings › ZoomLink when it is a real link, otherwise DEFAULT_ZOOM_LINK. */
+function zoomLink_(s) {
+  const v = String((s && s.ZoomLink) || '').trim();
+  return /^https?:\/\//i.test(v) ? v : DEFAULT_ZOOM_LINK;
+}
+
+/** "81335191824" → "813 3519 1824" */
+function zoomMeetingId_(link) {
+  const m = String(link).match(/\/j\/(\d{9,11})/);
+  if (!m) return '';
+  const d = m[1];
+  return d.length === 11 ? d.slice(0, 3) + ' ' + d.slice(3, 7) + ' ' + d.slice(7) : d.replace(/(\d{3})(\d{3})(\d+)/, '$1 $2 $3');
 }
 
 /** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */

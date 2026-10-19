@@ -1,4 +1,4 @@
-# Coffee with IT · v1.6
+# Coffee with IT · v1.7
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -34,7 +34,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | SignIns | Email, Date, Time for each visit |
 
-## Updating the live app to v1.6
+## Updating the live app to v1.7
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.
