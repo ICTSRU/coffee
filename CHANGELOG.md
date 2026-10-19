@@ -1,5 +1,10 @@
 # Changelog — Coffee with IT
 
+## v1.4 — 2026-10-19
+- E-mails: for remote (Zoom) bookings, the Zoom link box and the calendar line are replaced by
+  "سيتم إرسال دعوة اجتماع Zoom".
+- E-mails: the time is written as «من 11:45 إلى 11:55 · مدة الجلسة 10 دقائق». This removes the brackets that were flipping in Gmail.
+
 ## v1.3 — 2026-10-19
 - **Admin dashboard** (`?page=admin`, admins only): KPIs (confirmed, upcoming, in person/remote, attendance rate, cancellations, sign-ins);
   filters (date range, quick ranges, status, mode, attendance, department, topic, search); charts by topic, department, mode and day;

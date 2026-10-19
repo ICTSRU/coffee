@@ -127,7 +127,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
 <section class="hero"><div class="wrap">
   <div>
     <h1>لوحة إدارة حجوزات <span class="en">Coffee with IT</span></h1>
-    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.3</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.4</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
   </div>
   <div class="acts">
     <button type="button" class="hbtn" id="refresh">↻ تحديث</button>
@@ -252,7 +252,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
           attendance: past && st === 'Confirmed' ? (k % 4 === 0 ? 'No-show' : 'Attended') : '' });
       }
     }
-    function pack() { return { admin: 'm.elmahdy@sr.edu.sa', version: '1.3', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    function pack() { return { admin: 'm.elmahdy@sr.edu.sa', version: '1.4', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
       topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#' }; }
     return {
       getAdminData: function () { return Promise.resolve(pack()); },

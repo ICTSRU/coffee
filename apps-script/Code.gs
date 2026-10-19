@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v1.3
+ * Coffee with IT — Booking System  ·  v1.4
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics' };
 
@@ -487,17 +487,17 @@ function confirmationHtml_(b, s) {
       ['الموضوع', esc_(b.topic || s.Topic || '')],
       ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
       ['التاريخ', esc_(arDate_(b.date))],
-      ['الوقت', '<span dir="ltr">' + esc_(b.time) + ' – ' + esc_(b.endTime) + '</span> &nbsp;<span style="color:' + C.muted + ';font-weight:normal">(' + mins + ' دقائق)</span>'],
+      ['الوقت', timeRange_(b) + ' <span style="color:' + C.muted + ';font-weight:normal">· مدة الجلسة ' + mins + ' دقائق</span>'],
       ['طريقة الحضور', modePill_(b.mode, b.modeLabel)]
     ]) +
     whereBlock_(b) +
-    (calendarInvite
+    (b.mode === 'zoom' ? '' : (calendarInvite
       ? note_('📅 أرسلنا إليك أيضًا دعوة في تقويم Google بموعد الجلسة.')
-      : '<div style="margin:18px 0 4px">' + button_('أضف الموعد إلى التقويم', calendarLink_(b, s), C.blue) + '</div>') +
+      : '<div style="margin:18px 0 4px">' + button_('أضف الموعد إلى التقويم', calendarLink_(b, s), C.blue) + '</div>')) +
     '<div style="margin:22px 0 6px;font-weight:bold;color:' + C.dark + '">قبل الجلسة</div>' +
     '<ul style="margin:0;padding:0 18px 0 0;color:' + C.ink + '">' +
       (b.mode === 'zoom'
-        ? '<li>تأكد من تثبيت تطبيق Zoom وتجربة الصوت مسبقًا.</li><li>ادخل إلى الاجتماع قبل الموعد بدقيقتين.</li>'
+        ? '<li>تأكد من تثبيت تطبيق Zoom وتجربة الصوت مسبقًا.</li><li>ادخل إلى الاجتماع من الدعوة قبل الموعد بدقيقتين.</li>'
         : '<li>نرجو الحضور قبل الموعد بدقيقتين.</li><li>يمكنك إحضار جهازك المحمول لتطبيق الإعدادات مباشرة.</li>') +
     '</ul>' +
     '<div style="margin:24px 0 0;border-top:1px solid ' + C.line + ';padding-top:18px">' +
@@ -530,7 +530,7 @@ function reminderHtml_(b, s) {
     p_('نذكّرك بجلسة <b>Coffee with IT</b>' + (b.topic ? ' حول <b>' + esc_(b.topic) + '</b>' : '') + ' اليوم الساعة <b dir="ltr">' + esc_(b.time) + '</b>.') +
     detailsCard_([
       ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
-      ['الوقت', '<span dir="ltr">' + esc_(b.time) + ' – ' + esc_(b.endTime) + '</span>'],
+      ['الوقت', timeRange_(b)],
       ['طريقة الحضور', modePill_(b.mode, b.modeLabel)]
     ]) +
     whereBlock_(b);
@@ -599,17 +599,17 @@ function modePill_(mode, label) {
 
 function whereBlock_(b) {
   if (b.mode === 'zoom') {
-    const ok = /^https?:\/\//i.test(b.where || '');
-    return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-      '<div style="font-weight:bold;color:#08537f;margin-bottom:8px">رابط اجتماع Zoom</div>' +
-      (ok ? button_('انضم إلى الجلسة عبر Zoom', b.where, C.blue) +
-            '<div style="font-size:12px;color:' + C.muted + ';margin-top:8px;direction:ltr;word-break:break-all">' + esc_(b.where) + '</div>'
-          : '<div>' + esc_(b.where || 'سيصلك الرابط قبل الجلسة.') + '</div>') +
-      '</div>';
+    return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px;font-weight:bold;color:#08537f">' +
+      '🎥 سيتم إرسال دعوة اجتماع Zoom</div>';
   }
   return '<div style="background:' + C.light + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
     '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">📍 مكان الجلسة</div>' +
     '<div>' + esc_(b.where || '') + '</div></div>';
+}
+
+/** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */
+function timeRange_(b) {
+  return 'من <span dir="ltr">' + esc_(b.time) + '</span> إلى <span dir="ltr">' + esc_(b.endTime) + '</span>';
 }
 
 function button_(text, href, color) {
