@@ -1,5 +1,17 @@
 # Changelog — Coffee with IT
 
+## v1.3 — 2026-10-19
+- **Admin dashboard** (`?page=admin`, admins only): KPIs (confirmed, upcoming, in person/remote, attendance rate, cancellations, sign-ins);
+  filters (date range, quick ranges, status, mode, attendance, department, topic, search); charts by topic, department, mode and day;
+  bookings table with attendance marking (حضر / لم يحضر) and cancellation (attendee notified); CSV export (Excel-ready, Arabic);
+  printable A4 report / PDF of the filtered view.
+- **Session topics**: new Topics sheet; required topic dropdown on the booking page; admins add, enable or disable topics from the dashboard.
+  Each booking stores its topic, which appears in e-mails, calendar invites, reports and exports.
+- **E-mails redesigned** (confirmation, cancellation, reminder): branded header with logos, details card, Zoom button or location box,
+  calendar link, support footer with the ITOC logo. Every e-mail sends a **BCC copy to m.elmahdy@sr.edu.sa** (or Settings › NotifyEmail).
+- Booking page shows an "لوحة الإدارة" link to admins.
+- Bookings sheet gains the Attendance and Topic columns automatically.
+
 ## v1.2 — 2026-10-19
 - Sign-in page connected to the deployed booking app (Apps Script Web App, sr.edu.sa domain).
 - QR code for https://ictsru.github.io/coffee/ added to the sign-in page (desktop only) and provided in `assets/` (PNG + SVG).

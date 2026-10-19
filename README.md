@@ -1,34 +1,49 @@
-# Coffee with IT · v1.2
+# Coffee with IT · v1.3
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
-Booking site for the 10-minute **Coffee with IT** session on protecting meeting data when using Read AI.
-Staff choose a date, time and attendance mode (in person at IT, or remote via Zoom).
+Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **topic**, **date**, **time** and **attendance mode** (in person at IT / remote via Zoom). Administrators follow up on all bookings and produce reports from the admin dashboard.
 
-- **Public link (GitHub Pages):** https://ictsru.github.io/coffee/
-- **Booking app (Apps Script, @sr.edu.sa only):** linked from the sign-in button on the page above
-- **Bookings sheet:** "Coffee with IT — Bookings" (Google Drive, ITOC)
+| | Link |
+|---|---|
+| Public page (GitHub Pages) | https://ictsru.github.io/coffee/ |
+| Booking app (@sr.edu.sa only) | `…/exec`, reached through the sign-in button |
+| **Admin dashboard** | `…/exec?page=admin` (admins only: m.elmahdy@sr.edu.sa plus Settings › AdminEmails) |
+| Bookings sheet | "Coffee with IT — Bookings" (Google Drive) |
 
 ## Repository contents
 
 | Path | Purpose |
 |---|---|
-| `index.html` | ITOC-branded sign-in page (the page at ictsru.github.io/coffee). Explains @sr.edu.sa sign-in and opens the booking app. Includes a QR code so desktop visitors can open it on their phones. |
-| `apps-script/` | Source of the booking app (`Code.gs`, `Index.html`, `appsscript.json`). Not served by GitHub Pages; this copy is kept for version control. The live copy runs in the Google Sheet's Apps Script project. |
-| `assets/qr-coffee.png` / `.svg` | QR code → https://ictsru.github.io/coffee/ (high error correction; SVG for print) |
-| `posters/ar/`, `posters/en/` | Read AI data-leak awareness posters (Arabic v2.6, English v2.4), as PNG and PDF |
-| `.nojekyll` | Serves files as-is on GitHub Pages |
-| `CHANGELOG.md` | Change record |
+| `index.html` | ITOC-branded sign-in page (ictsru.github.io/coffee), with a QR code for phones |
+| `apps-script/Code.gs` | Server: slots, bookings, topics, admin API, e-mails, calendar invites, reminders, sign-in log |
+| `apps-script/Index.html` | Booking page (topic dropdown, e-mail auto-filled, departments list) |
+| `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, CSV export, printable PDF report |
+| `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
+| `assets/` | QR code (PNG/SVG) and the SRU / ICTD / ITOC logos **used by the e-mails**. Keep these published. |
+| `posters/ar`, `posters/en` | Awareness posters (PNG + PDF) |
+| `CHANGELOG.md`, `.nojekyll` | Change record; serve files as-is |
 
-## Publish to GitHub Pages
+## Google Sheet
 
-1. Create the repository **`coffee`** under the **ICTSRU** account (it must be named `coffee` for the link to be `ictsru.github.io/coffee/`).
-2. Upload **the contents** of this folder (not the folder itself) so that `index.html` sits at the repository root.
-   - Web upload: **Add file → Upload files** → drag everything in, including `.nojekyll`, then **Commit changes**.
-3. **Settings → Pages → Build and deployment:** Source *Deploy from a branch* · Branch **`main`** · folder **`/ (root)`** → **Save**.
-4. After about 1–2 minutes, open https://ictsru.github.io/coffee/ and test the sign-in button.
+| Sheet | Notes |
+|---|---|
+| Settings | Session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to m.elmahdy@sr.edu.sa), `AdminEmails` |
+| Slots | One row per slot; set `Active` to `FALSE` to close it |
+| Bookings | Adds the **Attendance** and **Topic** columns automatically on first use |
+| Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
+| SignIns | Email, Date, Time for each visit |
 
-## Updating the booking app
+## Updating the live app to v1.3
 
-Edit the code in the Apps Script project, then **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.
-The `/exec` URL stays the same, so `index.html` does not need to change. Copy the updated files into `apps-script/` here and add a CHANGELOG entry.
+1. Open the Sheet → **Extensions → Apps Script**.
+2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.
+3. **+ → HTML** → name it **Admin** → paste `apps-script/Admin.html`.
+4. Save → **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. The `/exec` URL does not change.
+5. Upload this folder's contents to the `coffee` repository so that `assets/` is live (the e-mail logos load from there).
+6. Open `…/exec?page=admin` and add your session topics.
+
+## Publishing on GitHub Pages
+
+Upload **the contents** of this folder to the root of the `ICTSRU/coffee` repository (including `.nojekyll`).
+**Settings → Pages → Branch `main` / root**.

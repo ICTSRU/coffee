@@ -123,14 +123,14 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 <section class="hero"><div class="in">
   <div>
     <h1>احجز جلسة <span class="en">Coffee with IT</span></h1>
-    <p id="topic">حماية بيانات الاجتماعات عند استخدام <span class="en">Read AI</span></p>
+    <p id="topic">جلسة قصيرة مع فريق تقنية المعلومات — اختر الموضوع والموعد المناسبين لك</p>
   </div>
   <div class="badge10" aria-label="مدة الجلسة 10 دقائق"><b id="mins">10</b><span>دقائق</span></div>
 </div></section>
 
 <div class="userbar">
   <span>مسجّل الدخول: <span class="chip en" id="who">…</span></span>
-  <span class="en" id="ver">v1.2</span>
+  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v1.3</span></span>
 </div>
 
 <main>
@@ -171,6 +171,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
       <section class="card">
         <h2 class="step"><i>4</i>بياناتك</h2>
         <div class="fields">
+          <div class="field full"><label for="topic2">موضوع الجلسة <span class="req">*</span></label><select id="topic2" required><option value="">اختر موضوع الجلسة…</option></select></div>
           <div class="field"><label for="name">الاسم <span class="req">*</span></label><input id="name" autocomplete="name" required maxlength="80"></div>
           <div class="field"><label for="email">البريد الإلكتروني <span class="req">*</span></label><input id="email" type="email" dir="ltr" autocomplete="email" required maxlength="120" placeholder="name@sr.edu.sa"><small class="fhint" id="emailHint" hidden>تمت تعبئته من حساب الدخول</small></div>
           <div class="field"><label for="dept">الإدارة <span class="req">*</span></label><select id="dept" required><option value="">اختر الإدارة…</option></select></div>
@@ -196,6 +197,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
         <dt>التاريخ</dt><dd id="sDate">—</dd>
         <dt>الوقت</dt><dd id="sTime">—</dd>
         <dt>الحضور</dt><dd id="sMode">—</dd>
+        <dt>الموضوع</dt><dd id="sTopic">—</dd>
       </dl>
       <button type="button" class="btn btn-primary" id="submit" disabled>تأكيد الحجز</button>
       <div class="mine">
@@ -254,17 +256,18 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     }
     return {
       getInitData: function () {
-        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.2', sessionMinutes: 10,
+        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.3', sessionMinutes: 10,
           topic: 'حماية بيانات الاجتماعات عند استخدام Read AI',
           onsiteLocation: 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]',
-          days: days(), myBookings: mine.slice() });
+          days: days(), myBookings: mine.slice(), isAdmin: true, adminUrl: '#admin',
+          topics: ['حماية بيانات الاجتماعات عند استخدام Read AI', 'إعدادات مشاركة تقارير Read AI', 'الاستخدام الآمن لأدوات الذكاء الاصطناعي'] });
       },
       book: function (p) {
         if (mine.length) return Promise.reject(new Error('لديك حجز قائم بالفعل. يمكنك إلغاؤه من «حجوزاتي» ثم الحجز من جديد.'));
         booked[p.date + p.time] = 1;
         var b = { id: 'CWI-DEMO-' + Math.random().toString(36).slice(2, 6).toUpperCase(), date: p.date, time: p.time,
           endTime: addMin(p.time, 10), mode: p.mode, modeLabel: p.mode === 'zoom' ? 'عن بُعد (Zoom)' : 'حضوري',
-          where: p.mode === 'zoom' ? 'https://zoom.us/j/…' : 'الإدارة التنفيذية للاتصالات وتقنية المعلومات', name: p.name };
+          where: p.mode === 'zoom' ? 'https://zoom.us/j/…' : 'الإدارة التنفيذية للاتصالات وتقنية المعلومات', name: p.name, topic: p.topic };
         mine.push({ id: b.id, date: b.date, time: b.time, modeLabel: b.modeLabel });
         return new Promise(function (r) { setTimeout(function () { r(b); }, 400); });
       },
@@ -329,8 +332,9 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   function renderSummary() {
     $('sDate').textContent = state.date ? longDate(state.date) : '—';
     $('sTime').textContent = state.time ? state.time + ' – ' + addMin(state.time, 10) : '—';
+    $('sTopic').textContent = $('topic2').value || '—';
     $('sMode').textContent = state.mode === 'zoom' ? 'عن بُعد (Zoom)' : state.mode === 'onsite' ? 'حضوري' : '—';
-    $('submit').disabled = state.busy || !(state.date && state.time && state.mode && $('name').value.trim() && validEmail($('email').value.trim()) && $('dept').value);
+    $('submit').disabled = state.busy || !(state.date && state.time && state.mode && $('name').value.trim() && validEmail($('email').value.trim()) && $('dept').value && $('topic2').value);
     $('submit').textContent = state.busy ? 'جارٍ الحجز…' : 'تأكيد الحجز';
   }
   function renderMine(list) {
@@ -349,15 +353,16 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   /* ---------- actions ---------- */
   function submit() {
     showMsg('');
+    if (!$('topic2').value) { showMsg('يرجى اختيار موضوع الجلسة.'); $('topic2').focus(); return; }
     if (!$('name').value.trim()) { showMsg('يرجى إدخال الاسم.'); $('name').focus(); return; }
     if (!validEmail($('email').value.trim())) { showMsg('يرجى إدخال بريد إلكتروني صحيح.'); $('email').focus(); return; }
     if (!$('dept').value) { showMsg('يرجى اختيار الإدارة.'); $('dept').focus(); return; }
     state.busy = true; renderSummary();
     call('book', { date: state.date, time: state.time, mode: state.mode, name: $('name').value,
-      email: $('email').value.trim(), department: $('dept').value, extension: $('ext').value, notes: $('notes').value })
+      topic: $('topic2').value, email: $('email').value.trim(), department: $('dept').value, extension: $('ext').value, notes: $('notes').value })
       .then(function (b) {
         var dl = $('doneDl'); dl.innerHTML = '';
-        [['رقم الحجز', b.id], ['التاريخ', longDate(b.date)], ['الوقت', b.time + ' – ' + b.endTime], ['الحضور', b.modeLabel]]
+        [['رقم الحجز', b.id], ['الموضوع', b.topic || $('topic2').value], ['التاريخ', longDate(b.date)], ['الوقت', b.time + ' – ' + b.endTime], ['الحضور', b.modeLabel]]
           .forEach(function (r) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); });
         $('form').hidden = true; $('done').hidden = false;
         $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -379,7 +384,8 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
       $('who').textContent = d.email;
       $('ver').textContent = 'v' + d.version;
       $('mins').textContent = d.sessionMinutes;
-      if (d.topic) $('topic').textContent = d.topic;
+      fillTopics(d.topics || []);
+      if (d.isAdmin && d.adminUrl) { var al = $('adminLink'); al.href = d.adminUrl; al.hidden = false; }
       if (d.onsiteLocation) $('onsiteText').textContent = d.onsiteLocation;
       if (!$('name').value) $('name').value = guessName(d.email);
       if (d.email && !$('email').value) { $('email').value = d.email; $('email').readOnly = true; $('emailHint').hidden = false; }
@@ -409,6 +415,12 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
       sel.appendChild(og);
     });
   })();
+  function fillTopics(list) {
+    var sel = $('topic2'), cur = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    list.forEach(function (t) { sel.appendChild(el('option', { value: t, text: t })); });
+    if (list.indexOf(cur) !== -1) sel.value = cur; else if (list.length === 1) sel.value = list[0];
+  }
   function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
   document.querySelectorAll('input[name="mode"]').forEach(function (r) {
@@ -417,6 +429,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   $('name').addEventListener('input', renderSummary);
   $('email').addEventListener('input', renderSummary);
   $('dept').addEventListener('change', renderSummary);
+  $('topic2').addEventListener('change', renderSummary);
   $('submit').addEventListener('click', submit);
   $('again').addEventListener('click', function () {
     $('done').hidden = true; $('form').hidden = false; state.time = null; renderAll();
