@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Coffee with IT"><rect width="200" height="200" rx="46" fill="#0b7a88"/><g transform="translate(22 18) scale(0.8)"><path d="M66 92 V72 L56 62 V42" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M90 92 V32" stroke="#ffffff" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M114 92 V72 L124 62 V42" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<circle cx="56" cy="34" r="8" fill="#0b7a88" stroke="#ffffff" stroke-width="5"/>
+<circle cx="90" cy="24" r="8" fill="#0b7a88" stroke="#ffffff" stroke-width="5"/>
+<circle cx="124" cy="34" r="8" fill="#0b7a88" stroke="#ffffff" stroke-width="5"/>
+<path d="M136 104 C162 104 164 140 136 142" stroke="#ffffff" stroke-width="11" stroke-linecap="round" fill="none"/>
+<path d="M44 92 H136 V128 C136 152 116 168 90 168 C64 168 44 152 44 128 Z" fill="#ffffff"/></g></svg>

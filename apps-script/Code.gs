@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v1.4
+ * Coffee with IT — Booking System  ·  v1.5
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics' };
 
@@ -33,11 +33,13 @@ function doGet(e) {
   if (wantsAdmin) {
     return HtmlService.createHtmlOutputFromFile('Admin')
       .setTitle('لوحة إدارة حجوزات Coffee with IT')
+      .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('احجز جلسة Coffee with IT')
+    .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -556,7 +558,10 @@ function layout_(o) {
         '</tr></table></td></tr>' +
       // hero
       '<tr><td style="background:' + o.accent + ';padding:26px 28px 24px;font-family:' + FONT + ';color:#ffffff;text-align:right">' +
-        '<div style="display:inline-block;background:rgba(255,255,255,0.18);border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold;direction:ltr">Coffee with IT · 10 min</div>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+          '<td valign="middle" style="padding-left:10px"><img src="' + ASSET_URL + 'cwit-mark-white.png" alt="Coffee with IT" width="40" height="40" style="display:block;width:40px;height:40px;border:0"></td>' +
+          '<td valign="middle"><span style="display:inline-block;background:rgba(255,255,255,0.18);border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold;direction:ltr">Coffee with IT · 10 min</span></td>' +
+        '</tr></table>' +
         '<div style="font-size:26px;line-height:1.4;font-weight:bold;margin-top:12px">' +
           '<span style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:#ffffff;color:' + o.accent + ';border-radius:50%;font-size:18px;margin-left:8px;vertical-align:middle">' + o.icon + '</span>' +
           esc_(o.title) + '</div>' +

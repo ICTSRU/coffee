@@ -125,9 +125,20 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
 </div></div>
 
 <section class="hero"><div class="wrap">
-  <div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span style="line-height:0;flex:0 0 auto"><svg role="img" aria-label="Coffee with IT" width="58" height="58" viewBox="0 0 200 200" fill="none"><path d="M66 92 V72 L56 62 V42" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+<path d="M90 92 V32" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" fill="none"></path>
+<path d="M114 92 V72 L124 62 V42" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+<circle cx="56" cy="34" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<circle cx="90" cy="24" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<circle cx="124" cy="34" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<path d="M136 104 C162 104 164 140 136 142" stroke="#ffffff" stroke-width="11" stroke-linecap="round" fill="none"></path>
+<path d="M44 92 H136 V128 C136 152 116 168 90 168 C64 168 44 152 44 128 Z" fill="#ffffff"></path>
+<path d="M30 182 Q90 196 150 182" stroke="#ffffff" stroke-opacity="0.7" stroke-width="8" stroke-linecap="round" fill="none"></path></svg></span>
+    <div>
     <h1>لوحة إدارة حجوزات <span class="en">Coffee with IT</span></h1>
-    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.4</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.5</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    </div>
   </div>
   <div class="acts">
     <button type="button" class="hbtn" id="refresh">↻ تحديث</button>
@@ -252,7 +263,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
           attendance: past && st === 'Confirmed' ? (k % 4 === 0 ? 'No-show' : 'Attended') : '' });
       }
     }
-    function pack() { return { admin: 'm.elmahdy@sr.edu.sa', version: '1.4', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    function pack() { return { admin: 'm.elmahdy@sr.edu.sa', version: '1.5', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
       topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#' }; }
     return {
       getAdminData: function () { return Promise.resolve(pack()); },

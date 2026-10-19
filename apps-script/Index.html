@@ -27,6 +27,8 @@ button,input,textarea{font:inherit;color:inherit}
 .hero .in{max-width:1000px;margin:0 auto;padding:28px 16px 34px;display:flex;flex-wrap:wrap;align-items:center;gap:18px;justify-content:space-between}
 .hero h1{margin:0;font-size:clamp(26px,4.4vw,38px);line-height:1.3;font-weight:800}
 .hero p{margin:6px 0 0;font-size:17px;opacity:.92}
+.cwit-mark{flex:0 0 auto;line-height:0}
+@media (max-width:560px){.cwit-mark svg{width:56px;height:56px}}
 .badge10{background:#fff;color:var(--blue);border-radius:var(--radius);padding:8px 18px;text-align:center;line-height:1.1}
 .badge10 b{display:block;font-size:34px;font-weight:800}
 .badge10 span{font-size:14px;font-weight:700}
@@ -121,16 +123,27 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 </div></div>
 
 <section class="hero"><div class="in">
-  <div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="cwit-mark"><svg role="img" aria-label="Coffee with IT" width="76" height="76" viewBox="0 0 200 200" fill="none"><path d="M66 92 V72 L56 62 V42" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+<path d="M90 92 V32" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" fill="none"></path>
+<path d="M114 92 V72 L124 62 V42" stroke="#7fd6df" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+<circle cx="56" cy="34" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<circle cx="90" cy="24" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<circle cx="124" cy="34" r="8" fill="none" stroke="#7fd6df" stroke-width="5"></circle>
+<path d="M136 104 C162 104 164 140 136 142" stroke="#ffffff" stroke-width="11" stroke-linecap="round" fill="none"></path>
+<path d="M44 92 H136 V128 C136 152 116 168 90 168 C64 168 44 152 44 128 Z" fill="#ffffff"></path>
+<path d="M30 182 Q90 196 150 182" stroke="#ffffff" stroke-opacity="0.7" stroke-width="8" stroke-linecap="round" fill="none"></path></svg></span>
+    <div>
     <h1>احجز جلسة <span class="en">Coffee with IT</span></h1>
     <p id="topic">جلسة قصيرة مع فريق تقنية المعلومات — اختر الموضوع والموعد المناسبين لك</p>
+    </div>
   </div>
   <div class="badge10" aria-label="مدة الجلسة 10 دقائق"><b id="mins">10</b><span>دقائق</span></div>
 </div></section>
 
 <div class="userbar">
   <span>مسجّل الدخول: <span class="chip en" id="who">…</span></span>
-  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v1.4</span></span>
+  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v1.5</span></span>
 </div>
 
 <main>
@@ -256,7 +269,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     }
     return {
       getInitData: function () {
-        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.4', sessionMinutes: 10,
+        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.5', sessionMinutes: 10,
           topic: 'حماية بيانات الاجتماعات عند استخدام Read AI',
           onsiteLocation: 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]',
           days: days(), myBookings: mine.slice(), isAdmin: true, adminUrl: '#admin',

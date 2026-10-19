@@ -1,4 +1,4 @@
-# Coffee with IT · v1.4
+# Coffee with IT · v1.5
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -20,8 +20,8 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `apps-script/Index.html` | Booking page (topic dropdown, e-mail auto-filled, departments list) |
 | `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, CSV export, printable PDF report |
 | `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
-| `assets/` | QR code (PNG/SVG) and the SRU / ICTD / ITOC logos **used by the e-mails**. Keep these published. |
-| `posters/ar`, `posters/en` | Awareness posters (PNG + PDF) |
+| `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo** (`cwit-mark`, `cwit-mark-white`, `cwit-icon`, `cwit-logo`, `cwit-logo-white`, as SVG/PNG). The e-mails and favicons load these from GitHub Pages, so keep them published. |
+| `posters/ar`, `posters/en` | Awareness posters (PNG + PDF), Arabic v2.8 / English v2.6, with the Coffee with IT logo |
 | `CHANGELOG.md`, `.nojekyll` | Change record; serve files as-is |
 
 ## Google Sheet
@@ -34,7 +34,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | SignIns | Email, Date, Time for each visit |
 
-## Updating the live app to v1.4
+## Updating the live app to v1.5
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.

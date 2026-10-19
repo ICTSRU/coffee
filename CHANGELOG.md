@@ -1,5 +1,10 @@
 # Changelog — Coffee with IT
 
+## v1.5 — 2026-10-19
+- New **Coffee with IT logo** (approved proposal 2, "بخار رقمي": a cup whose steam is drawn as circuit lines with network nodes, in ITOC teal and SRU purple).
+  Assets in `assets/`: color mark, white mark, app icon and horizontal lockups (SVG + PNG).
+- Logo added to the booking page, admin dashboard and sign-in page headers, the e-mail header, and the browser tab icon (favicon).
+
 ## v1.4 — 2026-10-19
 - E-mails: for remote (Zoom) bookings, the Zoom link box and the calendar line are replaced by
   "سيتم إرسال دعوة اجتماع Zoom".
