@@ -1,4 +1,4 @@
-# Coffee with IT · v1.5
+# Coffee with IT · v1.6
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -28,13 +28,13 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 
 | Sheet | Notes |
 |---|---|
-| Settings | Session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to m.elmahdy@sr.edu.sa), `AdminEmails` |
+| Settings | Session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to servicedesk@sr.edu.sa + m.elmahdy@sr.edu.sa; separate addresses with `;`), `AdminEmails` |
 | Slots | One row per slot; set `Active` to `FALSE` to close it |
 | Bookings | Adds the **Attendance** and **Topic** columns automatically on first use |
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | SignIns | Email, Date, Time for each visit |
 
-## Updating the live app to v1.5
+## Updating the live app to v1.6
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.

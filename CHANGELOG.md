@@ -1,5 +1,9 @@
 # Changelog — Coffee with IT
 
+## v1.6 — 2026-10-19
+- Every booking e-mail (confirmation, cancellation, reminder) is now blind-copied (BCC) to **servicedesk@sr.edu.sa and m.elmahdy@sr.edu.sa**.
+  Settings › NotifyEmail accepts several addresses (separated by `;` or `,`). Duplicates and the attendee's own address are removed automatically.
+
 ## v1.5 — 2026-10-19
 - New **Coffee with IT logo** (approved proposal 2, "بخار رقمي": a cup whose steam is drawn as circuit lines with network nodes, in ITOC teal and SRU purple).
   Assets in `assets/`: color mark, white mark, app icon and horizontal lockups (SVG + PNG).

@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v1.5
+ * Coffee with IT — Booking System  ·  v1.6
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics' };
 
@@ -326,7 +326,7 @@ function setup() {
     ['MaxActiveBookingsPerUser', '1', 'عدد الحجوزات القائمة المسموح بها لكل موظف'],
     ['OnsiteLocation', 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]', 'مكان الجلسة الحضورية'],
     ['ZoomLink', '[ضع رابط اجتماع Zoom هنا]', 'يُرسل في البريد لمن يختار الحضور عن بُعد'],
-    ['NotifyEmail', 'm.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة حجز/إلغاء/تذكير'],
+    ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
     ['CreateCalendarEvents', 'TRUE', 'إنشاء موعد في التقويم ودعوة الموظف'],
     ['CalendarId', 'primary', 'معرّف التقويم أو primary'],
     ['AdminEmails', '', 'مسؤولون إضافيون للوحة الإدارة (مفصولون بفواصل) — m.elmahdy@sr.edu.sa مسؤول دائمًا']
@@ -443,7 +443,8 @@ function getSettings_() {
 
 const SITE_URL = 'https://ictsru.github.io/coffee/';
 const ASSET_URL = SITE_URL + 'assets/';          // logos are served from GitHub Pages
-const DEFAULT_COPY_EMAIL = 'm.elmahdy@sr.edu.sa'; // used when Settings › NotifyEmail is empty
+// Blind copy of every booking e-mail. Settings › NotifyEmail overrides this list (separate addresses with ; or ,).
+const DEFAULT_COPY_EMAILS = ['servicedesk@sr.edu.sa', 'm.elmahdy@sr.edu.sa'];
 const MAIL_FROM_NAME = 'Coffee with IT · ITOC';
 const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
@@ -451,12 +452,21 @@ const C = { purple: '#501e8c', dark: '#3a1464', light: '#f0ebf8', blue: '#0a6eaa
   ink: '#241436', muted: '#6b5a80', line: '#e7e1f0', bg: '#f7f5fb', red: '#b42318', redLight: '#fef3f2', green: '#067647' };
 const FONT = "Tahoma, 'Segoe UI', Arial, sans-serif";
 
-/** Every booking e-mail goes to the attendee, with a blind copy to NotifyEmail (or DEFAULT_COPY_EMAIL). */
+/** Every booking e-mail goes to the attendee, with a blind copy (BCC) to the copy list. */
 function send_(to, subject, html, s) {
   const msg = { to: to, subject: subject, htmlBody: html, name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' };
-  const copy = String((s && s.NotifyEmail) || DEFAULT_COPY_EMAIL).trim();
-  if (copy && copy.toLowerCase() !== String(to).toLowerCase()) msg.bcc = copy;
+  const bcc = copyList_(s, to);
+  if (bcc.length) msg.bcc = bcc.join(',');
   MailApp.sendEmail(msg);
+}
+
+/** NotifyEmail (";" "," or spaces) or DEFAULT_COPY_EMAILS — valid, de-duplicated, never the attendee themself. */
+function copyList_(s, to) {
+  const raw = String((s && s.NotifyEmail) || '').trim();
+  const list = raw ? raw.split(/[;,\s]+/) : DEFAULT_COPY_EMAILS.slice();
+  const seen = {}, self = String(to || '').toLowerCase();
+  return list.map(x => x.trim().toLowerCase())
+    .filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x) && x !== self && !seen[x] && (seen[x] = true));
 }
 
 function sendConfirmation_(email, b, s) {
