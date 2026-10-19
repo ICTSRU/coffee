@@ -83,6 +83,19 @@ table.t tr:hover td{background:#fbfaff}
 .loading{padding:40px;text-align:center;color:var(--muted)}
 [hidden]{display:none!important}
 .print-only{display:none}
+.evk{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.evk .kpi{background:var(--purple-light);border:0}
+.dist .bar .t i{background:#e8a317}
+.cmts{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto}
+.cmt{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.cmt .h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.cmt .h b{color:var(--ink)}
+.cmt p{margin:6px 0 0;font-size:14px}
+.st{color:#e8a317;letter-spacing:1px;direction:ltr;display:inline-block}
+.evbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.auto-on{background:var(--green-light);color:var(--green)}
+.auto-off{background:var(--amber-light);color:var(--amber)}
+.lnk2{background:none;border:0;color:var(--purple);font-weight:700;cursor:pointer;font-size:12.5px;padding:4px 6px}
 .topics{display:flex;flex-direction:column;gap:8px}
 .topic{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;flex-wrap:wrap}
 .topic .nm{flex:1;min-width:200px;font-weight:700}
@@ -137,7 +150,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
 <path d="M30 182 Q90 196 150 182" stroke="#ffffff" stroke-opacity="0.7" stroke-width="8" stroke-linecap="round" fill="none"></path></svg></span>
     <div>
     <h1>لوحة إدارة حجوزات <span class="en">Coffee with IT</span></h1>
-    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.7</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    <p><span id="adminWho">…</span> · <span class="en" id="ver">v1.9</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
     </div>
   </div>
   <div class="acts">
@@ -182,6 +195,23 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       </div>
     </section>
 
+    <section class="card" aria-label="تقييم الجلسات">
+      <h2>تقييم الجلسات <span class="count">(حسب الفلاتر المحددة)</span></h2>
+      <div class="evk" id="evKpis"></div>
+      <div class="grid2">
+        <div><h2 style="font-size:15px">توزيع التقييمات</h2><div class="bars dist" id="evDist"></div>
+          <h2 style="font-size:15px;margin-top:16px">متوسط التقييم حسب الموضوع</h2><div class="bars" id="evTopic"></div></div>
+        <div><h2 style="font-size:15px">آخر المقترحات والتعليقات</h2><div class="cmts" id="evComments"></div></div>
+      </div>
+      <div class="evbar no-print">
+        <button type="button" class="btn btn-primary" id="sendPending">✉ إرسال الشكر والتقييم للجلسات المنتهية</button>
+        <button type="button" class="btn btn-secondary" id="sendTest">إرسال نسخة تجريبية إليّ</button>
+        <span class="spacer"></span>
+        <span class="pill" id="autoState">—</span>
+        <button type="button" class="btn btn-secondary" id="enableAuto" hidden>تفعيل الإرسال التلقائي</button>
+      </div>
+    </section>
+
     <section class="card no-print" aria-label="مواضيع الجلسات">
       <h2>مواضيع الجلسات <span class="count">(تظهر المواضيع المفعّلة في القائمة المنسدلة بصفحة الحجز)</span></h2>
       <div class="topics" id="topics"></div>
@@ -210,7 +240,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         <table class="t">
           <thead><tr>
             <th>رقم الحجز</th><th>التاريخ</th><th>الوقت</th><th>الاسم</th><th>البريد</th><th>الإدارة</th><th>الموضوع</th><th>التحويلة</th>
-            <th>الحضور</th><th>الحالة</th><th>الحضور الفعلي</th><th>ملاحظات</th><th class="act-col">إجراء</th>
+            <th>الحضور</th><th>الحالة</th><th>الحضور الفعلي</th><th>التقييم</th><th>ملاحظات</th><th class="act-col">إجراء</th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
@@ -260,16 +290,27 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
           email: 'user' + k + '@sr.edu.sa', name: names[k % names.length], department: depts[k % depts.length], extension: String(4100 + k),
           date: ds, time: p2(Math.floor(m / 60)) + ':' + p2(m % 60), mode: k % 3 === 0 ? 'zoom' : 'onsite', modeLabel: k % 3 === 0 ? 'عن بُعد (Zoom)' : 'حضوري',
           notes: k % 5 === 0 ? 'سؤال عن إعدادات مشاركة التقرير' : '', status: st, cancelledAt: '', topic: topics[k % 3 === 2 ? 1 : 0].name,
-          attendance: past && st === 'Confirmed' ? (k % 4 === 0 ? 'No-show' : 'Attended') : '' });
+          attendance: past && st === 'Confirmed' ? (k % 4 === 0 ? 'No-show' : 'Attended') : '',
+          ended: past, thanksSentAt: past && st === 'Confirmed' && k % 4 !== 0 ? ds + ' 13:00' : '' });
       }
     }
-    function pack() { return { admin: 'm.elmahdy@sr.edu.sa', version: '1.7', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    var comments = ['الجلسة مفيدة جدًا وقصيرة ومركّزة.', 'أتمنى إضافة جلسات عن أمن البريد الإلكتروني.', 'شرح واضح لإعدادات Read AI، شكرًا.', 'الوقت كان قصيرًا قليلًا.', ''];
+    var ratings = list.filter(function (b) { return b.thanksSentAt; }).filter(function (b, i) { return i % 5 !== 4; }).map(function (b, i) {
+      return { bookingId: b.id, email: b.email, name: b.name, department: b.department, topic: b.topic, date: b.date, time: b.time, mode: b.modeLabel,
+        rating: [5, 4, 5, 3, 4, 5, 2, 5][i % 8], comment: comments[i % 5], at: b.date + ' 14:0' + (i % 9) };
+    });
+    var auto = false;
+    function pack() { return { ratings: ratings.slice(), automation: auto, autoThanks: true, rate: { labels: ['غير راضٍ إطلاقًا','غير راضٍ','محايد','راضٍ','راضٍ جدًا'] }, admin: 'm.elmahdy@sr.edu.sa', version: '1.9', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
       topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#' }; }
     return {
       getAdminData: function () { return Promise.resolve(pack()); },
       setAttendance: function (id, v) { list.forEach(function (b) { if (b.id === id) b.attendance = v; }); return Promise.resolve({ ok: true, id: id, attendance: v }); },
       addTopic: function (n) { if (topics.some(function (t) { return t.name === n; })) return Promise.reject(new Error('هذا الموضوع موجود بالفعل.')); topics.push({ name: n, active: true }); return Promise.resolve(topics.map(function (t) { return Object.assign({}, t); })); },
       setTopicActive: function (n, a) { topics.forEach(function (t) { if (t.name === n) t.active = a; }); return Promise.resolve(topics.map(function (t) { return Object.assign({}, t); })); },
+      sendThanks: function (id) { list.forEach(function (b) { if (b.id === id) b.thanksSentAt = new Date().toISOString().slice(0, 16).replace('T', ' '); }); return Promise.resolve(pack()); },
+      sendPendingThanks: function () { var n = 0; list.forEach(function (b) { if (b.ended && b.status === 'Confirmed' && !b.thanksSentAt && b.attendance !== 'No-show') { b.thanksSentAt = 'now'; n++; } }); var d = pack(); d.sentCount = n; return Promise.resolve(d); },
+      sendThanksTest: function () { return Promise.resolve({ ok: true, to: 'm.elmahdy@sr.edu.sa' }); },
+      enableAutomation: function () { auto = true; return Promise.resolve({ automation: true }); },
       adminCancel: function (id) { list.forEach(function (b) { if (b.id === id) b.status = 'Cancelled'; }); return Promise.resolve(pack()); }
     };
   })();
@@ -393,7 +434,10 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       var status = b.status === 'Confirmed' ? (isPast(b) ? el('span', { 'class': 'pill p-past', text: 'منتهٍ' }) : el('span', { 'class': 'pill p-ok', text: 'مؤكد' })) : el('span', { 'class': 'pill p-x', text: 'ملغى' });
       var act = b.status === 'Confirmed' && !isPast(b)
         ? el('button', { type: 'button', 'class': 'lnk', 'aria-label': 'إلغاء حجز ' + b.name, on: { click: function () { cancel(b); } } }, ['إلغاء'])
-        : el('span', { 'class': 'muted', text: '—' });
+        : (b.status === 'Confirmed' && b.ended
+          ? el('button', { type: 'button', 'class': 'lnk2', title: b.thanksSentAt ? 'أُرسلت في ' + b.thanksSentAt : '', 'aria-label': 'إرسال الشكر والتقييم إلى ' + b.name,
+              on: { click: function () { thanks(b); } } }, [b.thanksSentAt ? '↻ إعادة إرسال التقييم' : '✉ إرسال الشكر والتقييم'])
+          : el('span', { 'class': 'muted', text: '—' }));
       tb.appendChild(el('tr', {}, [
         el('td', {}, [el('span', { 'class': 'en', style: 'font-family:Consolas,monospace;font-size:12px', text: b.id })]),
         el('td', { style: 'white-space:nowrap', text: shortDate(b.date) }),
@@ -406,10 +450,55 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         el('td', {}, [el('span', { 'class': 'pill ' + (b.mode === 'zoom' ? 'p-zoom' : 'p-on'), text: b.mode === 'zoom' ? 'Zoom' : 'حضوري' })]),
         el('td', {}, [status]),
         el('td', {}, [attCell(b)]),
+        el('td', { style: 'white-space:nowrap' }, [rateCell(b)]),
         el('td', { style: 'max-width:220px;font-size:12.5px', text: b.notes || '' }),
         el('td', { 'class': 'act-col' }, [act])
       ]));
     });
+  }
+  function rmap() { var m = {}; (data.ratings || []).forEach(function (r) { m[r.bookingId] = r; }); return m; }
+  function starStr(n) { return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n); }
+  function rateCell(b) {
+    var r = rmap()[b.id];
+    if (r) return el('span', { title: r.comment || '' }, [el('span', { 'class': 'st', text: starStr(r.rating) }), ' ' + r.rating + '/5']);
+    if (b.thanksSentAt) return el('span', { 'class': 'muted', style: 'font-size:12px', text: 'بانتظار الرد' });
+    return el('span', { 'class': 'muted', text: '—' });
+  }
+  function renderEval(list) {
+    var ids = {}; list.forEach(function (b) { ids[b.id] = 1; });
+    var rs = (data.ratings || []).filter(function (r) { return ids[r.bookingId]; });
+    var sentN = list.filter(function (b) { return b.thanksSentAt; }).length;
+    var avg = rs.length ? (rs.reduce(function (a, r) { return a + r.rating; }, 0) / rs.length) : 0;
+    var sat = rs.filter(function (r) { return r.rating >= 4; }).length;
+    var box = $('evKpis'); box.innerHTML = '';
+    [kpi(rs.length ? avg.toFixed(1) + ' / 5' : '—', 'متوسط التقييم', rs.length ? starStr(Math.round(avg)) : ''),
+     kpi(rs.length, 'عدد التقييمات', rs.filter(function (r) { return r.comment; }).length + ' بتعليق'),
+     kpi(sentN ? Math.round(rs.length * 100 / sentN) + '%' : '—', 'نسبة الاستجابة', 'من ' + sentN + ' رسالة تقييم'),
+     kpi(rs.length ? Math.round(sat * 100 / rs.length) + '%' : '—', 'نسبة الرضا', 'راضٍ أو راضٍ جدًا (4–5)')].forEach(function (k) { box.appendChild(k); });
+    var labels = (data.rate && data.rate.labels) || ['1','2','3','4','5'];
+    bars($('evDist'), [5,4,3,2,1].map(function (n) { return [n + ' · ' + labels[n - 1], rs.filter(function (r) { return r.rating === n; }).length]; }), '');
+    var bt = {}; rs.forEach(function (r) { var k = r.topic || 'غير محدد'; (bt[k] = bt[k] || []).push(r.rating); });
+    var trows = Object.keys(bt).map(function (k) { var a = bt[k]; return [k + ' (' + a.length + ')', +(a.reduce(function (x, y) { return x + y; }, 0) / a.length).toFixed(1)]; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+    var tb = $('evTopic'); tb.innerHTML = '';
+    if (!trows.length) tb.appendChild(el('p', { 'class': 'empty', text: 'لا توجد تقييمات بعد.' }));
+    trows.forEach(function (r) {
+      tb.appendChild(el('div', { 'class': 'bar blue', title: r[0] + ': ' + r[1] + '/5' }, [el('span', { 'class': 'n', text: r[0] }),
+        el('div', { 'class': 't' }, [el('i', { style: 'width:' + Math.round(r[1] * 20) + '%' })]), el('span', { 'class': 'c', text: r[1].toFixed(1) })]));
+    });
+    var cm = $('evComments'); cm.innerHTML = '';
+    var withC = rs.filter(function (r) { return r.comment; }).sort(function (a, b) { return (a.at < b.at) ? 1 : -1; }).slice(0, 15);
+    if (!withC.length) cm.appendChild(el('p', { 'class': 'empty', text: 'لا توجد تعليقات بعد.' }));
+    withC.forEach(function (r) {
+      cm.appendChild(el('div', { 'class': 'cmt' }, [
+        el('div', { 'class': 'h' }, [el('span', {}, [el('b', { text: r.name }), ' · ' + (r.department || '')]), el('span', {}, [el('span', { 'class': 'st', text: starStr(r.rating) }), ' · ' + shortDate(r.date)])]),
+        el('p', { text: r.comment }), r.topic ? el('div', { 'class': 'muted', style: 'font-size:12px', text: r.topic }) : null
+      ]));
+    });
+    var a = $('autoState');
+    a.className = 'pill ' + (data.automation && data.autoThanks ? 'auto-on' : 'auto-off');
+    a.textContent = data.automation ? (data.autoThanks ? 'الإرسال التلقائي مفعّل' : 'الإرسال التلقائي للشكر موقوف من الإعدادات') : 'الإرسال التلقائي غير مفعّل';
+    $('enableAuto').hidden = !!data.automation;
   }
   function renderPrintHead(list) {
     var h = $('printHead'); h.innerHTML = '';
@@ -420,7 +509,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   function render() {
     if (!data) return;
     var list = filtered();
-    renderKpis(list); renderCharts(list); renderTable(list); renderPrintHead(list);
+    renderKpis(list); renderCharts(list); renderEval(list); renderTable(list); renderPrintHead(list);
   }
   function renderTopics() {
     var box = $('topics'); box.innerHTML = '';
@@ -473,12 +562,19 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
     call('adminCancel', b.id).then(function (d) { data = d; render(); msg('تم إلغاء الحجز وإبلاغ الموظف.', 'ok'); })
       .catch(function (e) { msg(errText(e)); });
   }
+  function thanks(b) {
+    if (!window.confirm((b.thanksSentAt ? 'إعادة إرسال' : 'إرسال') + ' رسالة الشكر والتقييم إلى ' + b.name + '؟')) return;
+    call('sendThanks', b.id).then(function (d) { data = d; render(); msg('تم إرسال رسالة الشكر والتقييم إلى ' + b.name + '.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  }
   function exportCsv() {
     var list = filtered();
-    var head = ['رقم الحجز','تاريخ التسجيل','التاريخ','اليوم','الوقت','الموضوع','الاسم','البريد','الإدارة','التحويلة','طريقة الحضور','الحالة','الحضور الفعلي','ملاحظات'];
+    var rm = rmap();
+    var head = ['رقم الحجز','تاريخ التسجيل','التاريخ','اليوم','الوقت','الموضوع','الاسم','البريد','الإدارة','التحويلة','طريقة الحضور','الحالة','الحضور الفعلي','ملاحظات','التقييم (1-5)','تعليق التقييم','إرسال الشكر'];
     var lines = [head].concat(list.map(function (b) {
       return [b.id, b.timestamp, b.date, DAYS[pd(b.date).getDay()], b.time, b.topic, b.name, b.email, b.department, b.extension,
-        b.mode === 'zoom' ? 'عن بُعد (Zoom)' : 'حضوري', b.status === 'Confirmed' ? 'مؤكد' : 'ملغى', ATT[b.attendance] || '', b.notes];
+        b.mode === 'zoom' ? 'عن بُعد (Zoom)' : 'حضوري', b.status === 'Confirmed' ? 'مؤكد' : 'ملغى', ATT[b.attendance] || '', b.notes,
+        rm[b.id] ? rm[b.id].rating : '', rm[b.id] ? rm[b.id].comment : '', b.thanksSentAt || ''];
     })).map(function (r) { return r.map(function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     var a = el('a', { href: URL.createObjectURL(blob), download: 'CoffeeWithIT_Bookings_' + ymd(new Date()) + '.csv' });
@@ -498,6 +594,19 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   document.querySelectorAll('.chip[data-range]').forEach(function (c) { c.addEventListener('click', function () { setRange(c.getAttribute('data-range')); }); });
   $('reset').addEventListener('click', function () { ['fStatus','fMode','fAtt','fDept','fTopic','fQ'].forEach(function (id) { $(id).value = ''; }); setRange('all'); });
   $('csv').addEventListener('click', exportCsv);
+  $('sendPending').addEventListener('click', function () {
+    if (!window.confirm('إرسال رسالة الشكر والتقييم لكل جلسة منتهية لم تُرسل لها بعد (يُستثنى من سُجّل «لم يحضر»)؟')) return;
+    var btn = $('sendPending'); btn.disabled = true;
+    call('sendPendingThanks').then(function (d) { data = d; render(); msg(d.sentCount ? 'تم إرسال ' + d.sentCount + ' رسالة شكر وتقييم.' : 'لا توجد جلسات منتهية بانتظار رسالة الشكر.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); }).then(function () { btn.disabled = false; });
+  });
+  $('sendTest').addEventListener('click', function () {
+    call('sendThanksTest').then(function (r) { msg('أُرسلت نسخة تجريبية إلى ' + r.to + '.', 'ok'); }).catch(function (e) { msg(errText(e)); });
+  });
+  $('enableAuto').addEventListener('click', function () {
+    call('enableAutomation').then(function (r) { data.automation = r.automation; render(); msg('تم تفعيل الإرسال التلقائي كل ساعة: التذكير قبل الجلسة، والشكر والتقييم بعدها.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  });
   $('print').addEventListener('click', function () { renderPrintHead(filtered()); window.print(); });
   $('refresh').addEventListener('click', load);
   $('bookLink').href = hasGas ? location.href.split('?')[0] : 'https://ictsru.github.io/coffee/';

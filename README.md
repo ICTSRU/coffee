@@ -1,4 +1,4 @@
-# Coffee with IT · v1.7
+# Coffee with IT · v1.9
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -18,6 +18,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `index.html` | ITOC-branded sign-in page (ictsru.github.io/coffee), with a QR code for phones |
 | `apps-script/Code.gs` | Server: slots, bookings, topics, admin API, e-mails, calendar invites, reminders, sign-in log |
 | `apps-script/Index.html` | Booking page (topic dropdown, e-mail auto-filled, departments list) |
+| `apps-script/Rate.html` | Session rating page (`…/exec?page=rate&id=…`): 5-point satisfaction scale + suggestions. Opened from the thank-you e-mail; only the attendee can rate. |
 | `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, CSV export, printable PDF report |
 | `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
 | `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo** (`cwit-mark`, `cwit-mark-white`, `cwit-icon`, `cwit-logo`, `cwit-logo-white`, as SVG/PNG). The e-mails and favicons load these from GitHub Pages, so keep them published. |
@@ -33,12 +34,13 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | Bookings | Adds the **Attendance** and **Topic** columns automatically on first use |
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | SignIns | Email, Date, Time for each visit |
+| Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v1.7
+## Updating the live app to v1.9
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.
-3. **+ → HTML** → name it **Admin** → paste `apps-script/Admin.html`.
+3. **+ → HTML** → name it **Admin** → paste `apps-script/Admin.html`. Do the same for **Rate** → `apps-script/Rate.html`.
 4. Save → **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. The `/exec` URL does not change.
 5. Upload this folder's contents to the `coffee` repository so that `assets/` is live (the e-mail logos load from there).
 6. Open `…/exec?page=admin` and add your session topics.

@@ -1,5 +1,23 @@
 # Changelog — Coffee with IT
 
+## v1.9 — 2026-10-19
+- **Thank-you + rating e-mail after each session**, following the Event Attendance platform's model: one overall-satisfaction question on a
+  5-point scale (bilingual labels) with clickable 1–5 buttons, then an open suggestions question on the rating page.
+- New **rating page** (`Rate.html`, `?page=rate&id=…`): restricted to the attendee, one response per booking (resubmitting updates it),
+  available only after the session ends. Responses are stored in the new **Ratings** sheet.
+- Sending: manual per booking or in bulk ("all ended sessions") from the admin dashboard, plus an automatic hourly job (`hourlyJobs`,
+  which also sends the reminders) that e-mails each attendee `ThanksDelayMinutes` (default 30) after the session ends. No-shows are skipped.
+  The admin dashboard can send a test copy and turn on the automation.
+- **Admin dashboard → Session evaluation**: average rating, number of responses, response rate, satisfaction %, distribution 1–5,
+  average by topic, latest comments; rating column in the bookings table; rating and comment in the CSV export. All follow the active filters.
+- **E-mails use the Cairo font** (loaded from Google Fonts), with Tahoma as the fallback for clients that block web fonts (Gmail, Outlook for Windows).
+- New settings: `AutoThanks`, `ThanksDelayMinutes`, `WebAppUrl`.
+
+## v1.8 — 2026-10-19
+- Booking page: after a successful booking, the summary button changes to a green «✓ تم تأكيد الحجز» (disabled) until the user returns to the slots.
+- Booking page: times read «من 11:45 إلى 11:55» in the summary and on the confirmation card (they had appeared reversed as 11:55 – 11:45).
+- E-mail: the Zoom meeting ID (813 3519 1824) and the times are wrapped in Unicode left-to-right marks, so they no longer appear reversed in Gmail, which strips `dir` attributes.
+
 ## v1.7 — 2026-10-19
 - Remote (Zoom) bookings: the confirmation and reminder e-mails include the Zoom meeting link
   (a "انضم إلى الجلسة عبر Zoom" button, the meeting ID and the full link). The link is also added to the calendar invite.

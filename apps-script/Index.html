@@ -80,6 +80,7 @@ main{max-width:1000px;margin:0 auto;padding:16px 16px 40px;display:grid;grid-tem
 .btn{min-height:46px;border-radius:var(--radius);padding:10px 22px;font-weight:700;cursor:pointer;border:1px solid var(--purple)}
 .btn-primary{background:var(--purple);color:#fff}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-done,.btn-done:disabled{background:#067647;border-color:#067647;color:#fff;opacity:1;cursor:default}
 .btn-secondary{background:#fff;color:var(--purple)}
 .btn-danger{background:#fff;color:var(--danger);border-color:var(--danger);min-height:36px;padding:4px 14px;font-size:14px}
 
@@ -143,7 +144,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 
 <div class="userbar">
   <span>مسجّل الدخول: <span class="chip en" id="who">…</span></span>
-  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v1.7</span></span>
+  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v1.9</span></span>
 </div>
 
 <main>
@@ -233,7 +234,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   var MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   /* SRU departments — verbatim from sru-departments/assets/departments.json (Oct 2026) */
   var DEPARTMENTS = [{"label": "مكتب رئيس الجامعة", "items": ["مكتب رئيس الجامعة", "وحدة التوعية الفكرية", "مركز القيم والسلوك المهني", "مكتب إدارة الاستراتيجية", "إدارة التميز المؤسسي", "إدارة الاتصال المؤسسي", "إدارة المسؤولية المجتمعية", "إدارة المراجعة الداخلية", "مكتب الحوكمة وإدارة المخاطر والالتزام", "إدارة الشؤون القانونية"]}, {"label": "الإدارة التنفيذية لتطوير الأعمال", "items": ["الإدارة التنفيذية لتطوير الأعمال", "إدارة التدريب والاستشارات", "مركز التدريب", "مركز الاستشارات", "إدارة الشراكات", "إدارة تطوير المنتجات والخدمات", "مركز الابتكار وريادة الأعمال"]}, {"label": "عمداء الكليات", "items": ["عمداء الكليات", "كلية الطب", "كلية التمريض", "كلية الأعمال", "كلية العلوم التطبيقية"]}, {"label": "نائب الرئيس للشؤون الأكاديمية", "items": ["نائب الرئيس للشؤون الأكاديمية", "النائب المساعد لتجربة الطالب", "مكتب القبول", "سند", "مكتب المنح والحلول المالية", "مكتب التسجيل والإرشاد الأكاديمي", "إدارة الحياة الجامعية", "مكتب رعاية الخريجين", "النائب المساعد للتميز الأكاديمي", "مركز التعليم والتعلم", "قسم المهارات والمعارف الأساسية", "مركز التقييم والقياس", "إدارة التجهيزات التعليمية", "مكتب الاعتماد الأكاديمي", "النائب المساعد للدراسات العليا والبحث العلمي", "مكتب الدراسات العليا", "مكتب البحث العلمي"], "parents": {"سند": "مكتب القبول"}}, {"label": "المجلس العلمي", "items": ["المجلس العلمي"]}, {"label": "المشرفة على القسم النسائي", "items": ["المشرفة على القسم النسائي", "شطر الطالبات"]}, {"label": "الإدارة التنفيذية للاتصالات وتقنية المعلومات", "items": ["الإدارة التنفيذية للاتصالات وتقنية المعلومات", "إدارة الأمن السيبراني", "إدارة التحول الرقمي", "إدارة تقنية المعلومات", "مكتب إدارة البيانات"]}, {"label": "الإدارة التنفيذية للخدمات المشتركة", "items": ["الإدارة التنفيذية للخدمات المشتركة", "إدارة الشؤون المالية", "إدارة رأس المال البشري", "إدارة المرافق", "الإدارة الهندسية", "إدارة المشتريات", "إدارة المستودعات"]}];
-  var state = { days: [], date: null, time: null, mode: null, busy: false };
+  var state = { days: [], date: null, time: null, mode: null, busy: false, booked: false };
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- server bridge (Apps Script) with a local demo fallback ---------- */
@@ -269,7 +270,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     }
     return {
       getInitData: function () {
-        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.7', sessionMinutes: 10,
+        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '1.9', sessionMinutes: 10,
           topic: 'حماية بيانات الاجتماعات عند استخدام Read AI',
           onsiteLocation: 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]',
           days: days(), myBookings: mine.slice(), isAdmin: true, adminUrl: '#admin',
@@ -295,6 +296,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   /* ---------- helpers ---------- */
   function p2(n) { return (n < 10 ? '0' : '') + n; }
   function addMin(t, m) { var a = t.split(':').map(Number), x = a[0] * 60 + a[1] + m; return p2(Math.floor(x / 60)) + ':' + p2(x % 60); }
+  function range(t) { return 'من ' + t + ' إلى ' + addMin(t, 10); }
   function parts(ds) { var a = ds.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); }
   function longDate(ds) { var d = parts(ds); return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; }
   function el(tag, attrs, kids) {
@@ -344,9 +346,14 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   }
   function renderSummary() {
     $('sDate').textContent = state.date ? longDate(state.date) : '—';
-    $('sTime').textContent = state.time ? state.time + ' – ' + addMin(state.time, 10) : '—';
+    $('sTime').textContent = state.time ? range(state.time) : '—';
     $('sTopic').textContent = $('topic2').value || '—';
     $('sMode').textContent = state.mode === 'zoom' ? 'عن بُعد (Zoom)' : state.mode === 'onsite' ? 'حضوري' : '—';
+    if (state.booked) {
+      $('submit').disabled = true; $('submit').className = 'btn btn-done'; $('submit').textContent = '✓ تم تأكيد الحجز';
+      return;
+    }
+    $('submit').className = 'btn btn-primary';
     $('submit').disabled = state.busy || !(state.date && state.time && state.mode && $('name').value.trim() && validEmail($('email').value.trim()) && $('dept').value && $('topic2').value);
     $('submit').textContent = state.busy ? 'جارٍ الحجز…' : 'تأكيد الحجز';
   }
@@ -375,8 +382,9 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
       topic: $('topic2').value, email: $('email').value.trim(), department: $('dept').value, extension: $('ext').value, notes: $('notes').value })
       .then(function (b) {
         var dl = $('doneDl'); dl.innerHTML = '';
-        [['رقم الحجز', b.id], ['الموضوع', b.topic || $('topic2').value], ['التاريخ', longDate(b.date)], ['الوقت', b.time + ' – ' + b.endTime], ['الحضور', b.modeLabel]]
+        [['رقم الحجز', b.id], ['الموضوع', b.topic || $('topic2').value], ['التاريخ', longDate(b.date)], ['الوقت', 'من ' + b.time + ' إلى ' + b.endTime], ['الحضور', b.modeLabel]]
           .forEach(function (r) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); });
+        state.booked = true;
         $('form').hidden = true; $('done').hidden = false;
         $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
         return load(true);
@@ -443,9 +451,9 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   $('email').addEventListener('input', renderSummary);
   $('dept').addEventListener('change', renderSummary);
   $('topic2').addEventListener('change', renderSummary);
-  $('submit').addEventListener('click', submit);
+  $('submit').addEventListener('click', function () { if (!state.booked) submit(); });
   $('again').addEventListener('click', function () {
-    $('done').hidden = true; $('form').hidden = false; state.time = null; renderAll();
+    $('done').hidden = true; $('form').hidden = false; state.time = null; state.booked = false; renderAll();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   load(false);

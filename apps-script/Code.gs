@@ -1,18 +1,18 @@
 /**
- * Coffee with IT — Booking System  ·  v1.7
+ * Coffee with IT — Booking System  ·  v1.9
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
- * Sheets: Settings · Slots · Bookings · SignIns · Topics
+ * Sheets: Settings · Slots · Bookings · SignIns · Topics · Ratings
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '1.7';
+const APP_VERSION = '1.9';
 const DOMAIN = 'sr.edu.sa';
-const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics' };
+const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
 const BOOKING_HEADERS = ['BookingId', 'Timestamp', 'Email', 'Name', 'Department', 'Extension',
-  'Date', 'Time', 'Mode', 'Notes', 'Status', 'CalendarEventId', 'CancelledAt', 'ReminderSent', 'Attendance', 'Topic'];
+  'Date', 'Time', 'Mode', 'Notes', 'Status', 'CalendarEventId', 'CancelledAt', 'ReminderSent', 'Attendance', 'Topic', 'ThanksSentAt'];
 const COL = BOOKING_HEADERS.reduce((o, h, i) => (o[h] = i, o), {});
 
 const MODE_LABEL = { onsite: 'حضوري', zoom: 'عن بُعد (Zoom)' };
@@ -20,6 +20,17 @@ const MODE_LABEL = { onsite: 'حضوري', zoom: 'عن بُعد (Zoom)' };
 const DEFAULT_ZOOM_LINK = 'https://us06web.zoom.us/j/81335191824?pwd=Va9wQ6Yyz0NPaOjubMJBaxhqcUd7AR.1';
 const DEFAULT_ADMINS = ['m.elmahdy@sr.edu.sa'];   // extra admins: Settings › AdminEmails (comma-separated)
 const ATTENDANCE = { Attended: 'حضر', 'No-show': 'لم يحضر' };
+// Booking web app (/exec) — used to build rating links in e-mails. Settings › WebAppUrl overrides it.
+const DEFAULT_WEBAPP_URL = 'https://script.google.com/a/macros/sr.edu.sa/s/AKfycby3kz3l_mYr-xGakO9TQGQTJF4aiCTKNUbHYLTUJiOS1Q6RddFqVIcOjLa-4I_CBZMsbg/exec';
+
+/* Session evaluation — same model as the Event Attendance platform:
+   one overall-satisfaction question (5-point Likert) + one open question; one response per booking. */
+const RATING_HEADERS = ['Timestamp', 'BookingId', 'Email', 'Name', 'Department', 'Topic', 'SessionDate', 'SessionTime', 'Mode', 'Rating', 'Comment', 'UpdatedAt'];
+const RATE_Q_AR = 'ما مدى رضاك العام عن الجلسة؟';
+const RATE_Q_EN = 'Overall, how satisfied were you with the session?';
+const RATE_LABELS = [['غير راضٍ إطلاقًا', 'Very dissatisfied'], ['غير راضٍ', 'Dissatisfied'], ['محايد', 'Neutral'], ['راضٍ', 'Satisfied'], ['راضٍ جدًا', 'Very satisfied']];
+const RATE_OPEN_AR = 'ما مقترحاتك لتحسين جلسات Coffee with IT؟';
+const RATE_OPEN_EN = 'What would you suggest to improve Coffee with IT sessions?';
 
 /* ───────────────────────────── Web app ───────────────────────────── */
 
@@ -32,6 +43,13 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
   logSignIn_(email);
+  if (e && e.parameter && e.parameter.page === 'rate') {
+    return HtmlService.createHtmlOutputFromFile('Rate')
+      .setTitle('تقييم جلسة Coffee with IT')
+      .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
   if (wantsAdmin) {
     return HtmlService.createHtmlOutputFromFile('Admin')
       .setTitle('لوحة إدارة حجوزات Coffee with IT')
@@ -180,8 +198,12 @@ function getAdminData() {
     department: r[COL.Department], extension: r[COL.Extension], date: r[COL.Date], time: r[COL.Time],
     mode: r[COL.Mode] === MODE_LABEL.zoom ? 'zoom' : 'onsite', modeLabel: r[COL.Mode], notes: r[COL.Notes],
     status: r[COL.Status], cancelledAt: r[COL.CancelledAt], attendance: r[COL.Attendance] || '',
-    topic: r[COL.Topic] || ''
+    topic: r[COL.Topic] || '', thanksSentAt: r[COL.ThanksSentAt] || '',
+    ended: toDateTime_(r[COL.Date], r[COL.Time]).getTime() + (Number(s.SessionMinutes) || 10) * 60000 <= Date.now()
   }));
+  const ratings = ratingRows_().map(x => ({ bookingId: x.BookingId, email: x.Email, name: x.Name, department: x.Department,
+    topic: x.Topic, date: x.SessionDate, time: x.SessionTime, mode: x.Mode, rating: Number(x.Rating) || 0,
+    comment: x.Comment, at: x.UpdatedAt || x.Timestamp }));
   const now = new Date();
   const slots = slotRows_().filter(x => x.active);
   const futureSlots = slots.filter(x => toDateTime_(x.date, x.time) > now);
@@ -193,7 +215,9 @@ function getAdminData() {
     admin: email, version: APP_VERSION, generatedAt: Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'),
     topic: String(s.Topic || ''), bookings: bookings, topics: topicRows_(),
     slots: { total: slots.length, future: futureSlots.length, freeFuture: freeFuture },
-    signIns: signIns, sheetUrl: SpreadsheetApp.getActive().getUrl()
+    signIns: signIns, sheetUrl: SpreadsheetApp.getActive().getUrl(),
+    ratings: ratings, automation: automationOn_(), autoThanks: String(s.AutoThanks).toUpperCase() !== 'FALSE',
+    rate: { q: RATE_Q_AR, labels: RATE_LABELS.map(l => l[0]) }
   };
 }
 
@@ -300,6 +324,176 @@ function ensureBookingHeaders_() {
   });
 }
 
+/* ─────────────────────── Session evaluation (rating) ─────────────────────── */
+
+/** Rating page: booking summary + previous answer. Only the attendee (or an admin) may open it. */
+function getRateData(id) {
+  const email = requireUser_();
+  const s = getSettings_();
+  const r = findBooking_(id);
+  if (!r) throw new Error('لم يتم العثور على الحجز. تأكد من فتح الرابط من رسالة التقييم.');
+  if (r.row[COL.Email].toLowerCase() !== email && !isAdmin_(email)) throw new Error('رابط التقييم خاص بصاحب الحجز. سجّل الدخول بالحساب الذي حجزت به.');
+  if (r.row[COL.Status] !== 'Confirmed') throw new Error('هذا الحجز ملغى، لا يمكن تقييمه.');
+  const mins = Number(s.SessionMinutes) || 10;
+  const end = new Date(toDateTime_(r.row[COL.Date], r.row[COL.Time]).getTime() + mins * 60000);
+  const prev = ratingRows_().filter(x => x.BookingId === id)[0];
+  return {
+    version: APP_VERSION,
+    booking: { id: id, name: r.row[COL.Name], date: r.row[COL.Date], dateLabel: arDate_(r.row[COL.Date]), time: r.row[COL.Time],
+      endTime: addMinutes_(r.row[COL.Time], mins), topic: r.row[COL.Topic] || String(s.Topic || ''), modeLabel: r.row[COL.Mode] },
+    ended: end <= new Date(),
+    previous: prev ? { rating: Number(prev.Rating) || 0, comment: prev.Comment || '' } : null,
+    q: { ar: RATE_Q_AR, en: RATE_Q_EN, open_ar: RATE_OPEN_AR, open_en: RATE_OPEN_EN, labels: RATE_LABELS }
+  };
+}
+
+/** Saves (or updates) the attendee's rating: one response per booking. */
+function submitRating(id, rating, comment) {
+  const email = requireUser_();
+  const s = getSettings_();
+  const n = parseInt(rating, 10);
+  if (!(n >= 1 && n <= 5)) throw new Error('يرجى اختيار التقييم من 1 إلى 5.');
+  const r = findBooking_(id);
+  if (!r || r.row[COL.Email].toLowerCase() !== email) throw new Error('رابط التقييم خاص بصاحب الحجز.');
+  if (r.row[COL.Status] !== 'Confirmed') throw new Error('هذا الحجز ملغى، لا يمكن تقييمه.');
+  const end = toDateTime_(r.row[COL.Date], r.row[COL.Time]).getTime() + (Number(s.SessionMinutes) || 10) * 60000;
+  if (end > Date.now()) throw new Error('يمكنك تقييم الجلسة بعد انتهائها.');
+  const tz = Session.getScriptTimeZone(), now = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
+  const text = clean_(comment, 1000);
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    const sh = ratingsSheet_();
+    const ids = sh.getLastRow() > 1 ? sh.getRange(2, 2, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]) : [];
+    const i = ids.indexOf(id);
+    if (i !== -1) {
+      sh.getRange(i + 2, 10, 1, 3).setNumberFormat('@').setValues([[String(n), text, now]]);
+    } else {
+      const b = r.row;
+      sh.getRange(sh.getLastRow() + 1, 1, 1, RATING_HEADERS.length).setNumberFormat('@').setValues([[now, id, b[COL.Email], b[COL.Name],
+        b[COL.Department], b[COL.Topic] || String(s.Topic || ''), b[COL.Date], b[COL.Time], b[COL.Mode], String(n), text, '']]);
+    }
+  } finally { lock.releaseLock(); }
+  return { ok: true, rating: n };
+}
+
+/** Admin: send (or resend) the thank-you + rating e-mail for one booking. */
+function sendThanks(id) {
+  requireAdmin_();
+  const s = getSettings_();
+  const r = findBooking_(id);
+  if (!r || r.row[COL.Status] !== 'Confirmed') throw new Error('الحجز غير موجود أو ملغى.');
+  if (!sessionEnded_(r.row, s)) throw new Error('لم تنتهِ الجلسة بعد.');
+  thanksAndMark_(r, s);
+  return getAdminData();
+}
+
+/** Admin: send the thank-you + rating e-mail to every ended session that has not received it (no-shows skipped). */
+function sendPendingThanks() {
+  requireAdmin_();
+  const n = processThanks_(false);
+  const d = getAdminData(); d.sentCount = n;
+  return d;
+}
+
+/** Admin: send a sample thank-you e-mail to yourself. */
+function sendThanksTest() {
+  const email = requireAdmin_();
+  const s = getSettings_();
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const b = { id: 'CWI-TEST', name: 'تجربة', date: today, time: '10:00', endTime: addMinutes_('10:00', Number(s.SessionMinutes) || 10),
+    topic: String(s.Topic || ''), modeLabel: 'حضوري' };
+  MailApp.sendEmail({ to: email, subject: '[تجربة] شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s),
+    name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' });
+  return { ok: true, to: email };
+}
+
+/** Admin: turn on the hourly automation (reminders + thank-you e-mails). */
+function enableAutomation() {
+  requireAdmin_();
+  installAutomation_();
+  return { automation: automationOn_() };
+}
+
+/** Hourly trigger: reminders before sessions, then thank-you + rating e-mails after them. */
+function hourlyJobs() {
+  try { sendReminders(); } catch (err) { console.warn('reminders: ' + err); }
+  try {
+    if (String(getSettings_().AutoThanks).toUpperCase() !== 'FALSE') processThanks_(true);
+  } catch (err) { console.warn('thanks: ' + err); }
+}
+
+/** auto=true: only sessions that ended ThanksDelayMinutes ago and within the last 7 days. */
+function processThanks_(auto) {
+  const s = getSettings_();
+  ensureBookingHeaders_();
+  const sh = sheet_(SHEETS.BOOKINGS);
+  const data = sh.getDataRange().getDisplayValues();
+  const mins = Number(s.SessionMinutes) || 10, delay = (Number(s.ThanksDelayMinutes) || 30) * 60000;
+  const now = Date.now();
+  let sent = 0;
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[COL.BookingId] || row[COL.Status] !== 'Confirmed' || row[COL.ThanksSentAt] || row[COL.Attendance] === 'No-show') continue;
+    const end = toDateTime_(row[COL.Date], row[COL.Time]).getTime() + mins * 60000;
+    if (end > now) continue;
+    if (auto && (now < end + delay || now - end > 7 * 86400000)) continue;
+    try { thanksAndMark_({ row: row, index: i }, s); sent++; } catch (err) { console.warn(err); }
+  }
+  return sent;
+}
+
+function thanksAndMark_(r, s) {
+  const b = { id: r.row[COL.BookingId], name: r.row[COL.Name], date: r.row[COL.Date], time: r.row[COL.Time],
+    endTime: addMinutes_(r.row[COL.Time], Number(s.SessionMinutes) || 10), topic: r.row[COL.Topic] || String(s.Topic || ''),
+    modeLabel: r.row[COL.Mode] };
+  MailApp.sendEmail({ to: r.row[COL.Email], subject: 'شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة',
+    htmlBody: thanksHtml_(b, s), name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' });
+  sheet_(SHEETS.BOOKINGS).getRange(r.index + 1, COL.ThanksSentAt + 1).setNumberFormat('@')
+    .setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'));
+}
+
+function sessionEnded_(row, s) {
+  return toDateTime_(row[COL.Date], row[COL.Time]).getTime() + (Number(s.SessionMinutes) || 10) * 60000 <= Date.now();
+}
+
+/** { row, index } — index is the 0-based position in getDataRange() (header = 0). */
+function findBooking_(id) {
+  ensureBookingHeaders_();
+  const data = sheet_(SHEETS.BOOKINGS).getDataRange().getDisplayValues();
+  for (let i = 1; i < data.length; i++) if (data[i][COL.BookingId] === id) return { row: data[i], index: i };
+  return null;
+}
+
+function ratingsSheet_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEETS.RATINGS);
+  return sh || ensureSheet_(SHEETS.RATINGS, RATING_HEADERS, []);
+}
+
+function ratingRows_() {
+  const v = ratingsSheet_().getDataRange().getDisplayValues();
+  return v.slice(1).filter(r => r[1]).map(r => RATING_HEADERS.reduce((o, h, i) => (o[h] = r[i] || '', o), {}));
+}
+
+function installAutomation_() {
+  ScriptApp.getProjectTriggers().filter(t => ['sendReminders', 'hourlyJobs'].indexOf(t.getHandlerFunction()) !== -1)
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('hourlyJobs').timeBased().everyHours(1).create();
+}
+
+function automationOn_() {
+  try { return ScriptApp.getProjectTriggers().some(t => ['hourlyJobs', 'sendReminders'].indexOf(t.getHandlerFunction()) !== -1); }
+  catch (err) { return false; }
+}
+
+function webAppUrl_(s) {
+  const v = String((s && s.WebAppUrl) || '').trim();
+  return /^https:\/\/script\.google\.com\//.test(v) ? v : DEFAULT_WEBAPP_URL;
+}
+
+function rateLink_(s, id, n) {
+  return webAppUrl_(s) + '?page=rate&id=' + encodeURIComponent(id) + (n ? '&r=' + n : '');
+}
+
 /* ─────────────────────────── Admin (menu) ─────────────────────────── */
 
 function onOpen() {
@@ -307,7 +501,7 @@ function onOpen() {
     .addItem('1) إعداد الأوراق (أول مرة)', 'setup')
     .addItem('2) توليد المواعيد من الإعدادات', 'generateSlots')
     .addSeparator()
-    .addItem('تفعيل التذكير التلقائي (كل ساعة)', 'installReminderTrigger')
+    .addItem('تفعيل الإرسال التلقائي: التذكير + الشكر والتقييم (كل ساعة)', 'installReminderTrigger')
     .addToUi();
 }
 
@@ -331,12 +525,16 @@ function setup() {
     ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
     ['CreateCalendarEvents', 'TRUE', 'إنشاء موعد في التقويم ودعوة الموظف'],
     ['CalendarId', 'primary', 'معرّف التقويم أو primary'],
-    ['AdminEmails', '', 'مسؤولون إضافيون للوحة الإدارة (مفصولون بفواصل) — m.elmahdy@sr.edu.sa مسؤول دائمًا']
+    ['AdminEmails', '', 'مسؤولون إضافيون للوحة الإدارة (مفصولون بفواصل) — m.elmahdy@sr.edu.sa مسؤول دائمًا'],
+    ['AutoThanks', 'TRUE', 'إرسال رسالة الشكر والتقييم تلقائيًا بعد انتهاء الجلسة (يتطلب تفعيل الإرسال التلقائي)'],
+    ['ThanksDelayMinutes', '30', 'بعد كم دقيقة من انتهاء الجلسة تُرسل رسالة الشكر'],
+    ['WebAppUrl', DEFAULT_WEBAPP_URL, 'رابط تطبيق الحجز (exec) — يُستخدم في روابط التقييم']
   ]);
   ensureSheet_(SHEETS.SLOTS, ['SlotId', 'Date', 'Time', 'Capacity', 'Active'], []);
   ensureSheet_(SHEETS.BOOKINGS, BOOKING_HEADERS, []);
   ensureSheet_(SHEETS.SIGNINS, ['Email', 'Date', 'Time'], []);
   topicsSheet_();
+  ratingsSheet_();
   safeAlert_('تم إعداد الأوراق. راجع ورقة Settings ثم اختر «توليد المواعيد».');
 }
 
@@ -386,10 +584,8 @@ function sendReminders() {
 }
 
 function installReminderTrigger() {
-  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'sendReminders')
-    .forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('sendReminders').timeBased().everyHours(1).create();
-  safeAlert_('تم تفعيل التذكير التلقائي كل ساعة.');
+  installAutomation_();
+  safeAlert_('تم تفعيل الإرسال التلقائي كل ساعة: التذكير قبل الجلسة، ورسالة الشكر والتقييم بعدها.');
 }
 
 /* ───────────────────────────── Data ───────────────────────────── */
@@ -452,7 +648,9 @@ const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأرب
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const C = { purple: '#501e8c', dark: '#3a1464', light: '#f0ebf8', blue: '#0a6eaa', blueLight: '#e6f3fa',
   ink: '#241436', muted: '#6b5a80', line: '#e7e1f0', bg: '#f7f5fb', red: '#b42318', redLight: '#fef3f2', green: '#067647' };
-const FONT = "Tahoma, 'Segoe UI', Arial, sans-serif";
+// Cairo first (Apple Mail, iOS Mail, Outlook for Mac, Thunderbird). Gmail and Outlook for Windows fall back to Tahoma.
+const FONT = "'Cairo', Tahoma, 'Segoe UI', Arial, sans-serif";
+const FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap';
 
 /** Every booking e-mail goes to the attendee, with a blind copy (BCC) to the copy list. */
 function send_(to, subject, html, s) {
@@ -552,12 +750,43 @@ function reminderHtml_(b, s) {
     subtitle: 'اليوم · ' + b.time, accent: C.blue, body: body });
 }
 
+function thanksHtml_(b, s) {
+  const cells = RATE_LABELS.map((l, i) => {
+    const n = i + 1, link = rateLink_(s, b.id, n);
+    return '<td align="center" valign="top" width="20%" style="padding:0 3px">' +
+      '<a href="' + esc_(link) + '" target="_blank" style="display:block;text-decoration:none;border:2px solid ' + C.purple + ';border-radius:8px;' +
+        'background:' + (n >= 4 ? C.light : '#ffffff') + ';color:' + C.dark + ';font-family:' + FONT + ';padding:10px 0 8px">' +
+        '<span style="display:block;font-size:24px;font-weight:bold;line-height:1.2">' + n + '</span>' +
+        '<span style="display:block;font-size:11px;line-height:1.4;color:' + C.muted + '">' + esc_(l[0]) + '</span>' +
+        '<span style="display:block;font-size:10px;line-height:1.3;color:' + C.muted + '">' + esc_(l[1]) + '</span></a></td>';
+  }).join('');
+  const body =
+    p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
+    p_('شكرًا لحضورك جلسة <b>Coffee with IT</b>' + (b.topic ? ' حول <b>' + esc_(b.topic) + '</b>' : '') + '. يهمنا رأيك لتطوير جلساتنا القادمة، ولن يستغرق التقييم أكثر من دقيقة.') +
+    '<div dir="ltr" style="text-align:left;color:' + C.muted + ';font-size:13px;margin:0 0 16px">Thank you for attending. Your feedback helps us improve — it takes less than a minute.</div>' +
+    '<div style="border-top:1px solid ' + C.line + ';padding-top:16px;text-align:center">' +
+      '<div style="font-weight:bold;font-size:17px;color:' + C.dark + '">' + RATE_Q_AR + '</div>' +
+      '<div dir="ltr" style="font-size:13px;color:' + C.muted + ';margin-bottom:12px">' + RATE_Q_EN + '</div>' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="ltr"><tr>' + cells + '</tr></table>' +
+      '<div style="font-size:13px;color:' + C.muted + ';margin-top:12px">اضغط على رقم للتقييم، ثم يمكنك كتابة مقترحاتك · Tap a number, then add your suggestions</div>' +
+    '</div>' +
+    detailsCard_([
+      ['الجلسة', esc_(arDate_(b.date)) + ' · ' + timeRange_(b)],
+      ['طريقة الحضور', esc_(b.modeLabel || '')]
+    ]);
+  return layout_({ preheader: 'شكرًا لحضورك — ' + RATE_Q_AR, icon: '★', title: 'شكرًا لحضورك',
+    subtitle: 'قيّم جلسة Coffee with IT · Rate your session', accent: C.purple, body: body });
+}
+
 /* ---------- building blocks ---------- */
 
 function layout_(o) {
   return '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">' +
-    '<meta name="viewport" content="width=device-width, initial-scale=1"><title>' + esc_(o.title) + '</title></head>' +
-    '<body style="margin:0;padding:0;background:' + C.bg + '">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1"><title>' + esc_(o.title) + '</title>' +
+    '<link href="' + FONT_CSS_URL + '" rel="stylesheet" type="text/css">' +
+    '<style type="text/css">@import url(\'' + FONT_CSS_URL + '\');' +
+    'body,table,td,div,p,a,span,b,li{font-family:' + FONT + '}</style></head>' +
+    '<body style="margin:0;padding:0;background:' + C.bg + ';font-family:' + FONT + '">' +
     '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' + esc_(o.preheader) + '</div>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + C.bg + '"><tr>' +
     '<td align="center" style="padding:24px 12px">' +
@@ -621,7 +850,7 @@ function whereBlock_(b) {
     return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
       '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">🎥 رابط اجتماع Zoom</div>' +
       button_('انضم إلى الجلسة عبر Zoom', link, C.blue) +
-      (id ? '<div style="margin-top:10px;font-size:14px;color:' + C.ink + '">رقم الاجتماع: <b dir="ltr" style="font-family:Consolas,Menlo,monospace">' + esc_(id) + '</b></div>' : '') +
+      (id ? '<div style="margin-top:10px;font-size:14px;color:' + C.ink + '">رقم الاجتماع: <b dir="ltr" style="font-family:Consolas,Menlo,monospace;letter-spacing:0.5px">' + ltr_(esc_(id)) + '</b></div>' : '') +
       '<div style="font-size:12px;color:' + C.muted + ';margin-top:6px;direction:ltr;text-align:left;word-break:break-all">' +
         '<a href="' + esc_(link) + '" style="color:' + C.muted + '">' + esc_(link) + '</a></div>' +
       '</div>';
@@ -645,9 +874,12 @@ function zoomMeetingId_(link) {
   return d.length === 11 ? d.slice(0, 3) + ' ' + d.slice(3, 7) + ' ' + d.slice(7) : d.replace(/(\d{3})(\d{3})(\d+)/, '$1 $2 $3');
 }
 
+/** Wraps text in Unicode LRE…PDF marks: keeps left-to-right order inside Arabic text even when a mail client strips dir="ltr". */
+function ltr_(text) { return '\u202A' + text + '\u202C'; }
+
 /** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */
 function timeRange_(b) {
-  return 'من <span dir="ltr">' + esc_(b.time) + '</span> إلى <span dir="ltr">' + esc_(b.endTime) + '</span>';
+  return 'من <span dir="ltr">' + ltr_(esc_(b.time)) + '</span> إلى <span dir="ltr">' + ltr_(esc_(b.endTime)) + '</span>';
 }
 
 function button_(text, href, color) {
