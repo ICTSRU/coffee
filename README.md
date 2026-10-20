@@ -1,4 +1,4 @@
-# Coffee with IT · v2.7
+# Coffee with IT · v2.9
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -21,8 +21,8 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `apps-script/Rate.html` | Session rating page (`…/exec?page=rate&id=…`): 5-point satisfaction scale + suggestions. Opened from the thank-you e-mail; only the attendee can rate. |
 | `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, CSV export, printable PDF report |
 | `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
-| `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo** (`cwit-mark`, `cwit-mark-white`, `cwit-icon`, `cwit-logo`, `cwit-logo-white`, as SVG/PNG). The e-mails and favicons load these from GitHub Pages, so keep them published. |
-| `posters/ar`, `posters/en` | Awareness posters (PNG + PDF), Arabic v2.8 / English v2.7, with the Coffee with IT logo |
+| `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo (v2.9)**: `cwit-logo.png` (full bilingual logo, transparent), `cwit-logo-white.png` (on a white card, for dark backgrounds), `cwit-mark.png` (cup only, transparent), `cwit-badge.png` (cup on a white tile — e-mails), `cwit-favicon.png` / `cwit-icon.png` (app icon) |
+| `posters/ar`, `posters/en` | Awareness posters (PNG + PDF), Arabic v2.9 / English v2.9, with the Coffee with IT logo |
 | `CHANGELOG.md`, `.nojekyll` | Change record; serve files as-is |
 
 ## Google Sheet
@@ -36,22 +36,23 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v2.7
+## Updating the live app to v2.9
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.
 3. **+ → HTML** → name it **Admin** → paste `apps-script/Admin.html`. Do the same for **Rate** → `apps-script/Rate.html`.
 4. Save → **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. The `/exec` URL does not change.
 5. Upload this folder's contents to the `coffee` repository so that `assets/` is live (the e-mail logos load from there).
+   **v2.9:** upload the new `assets/cwit-badge.png` and `assets/cwit-favicon.png` **before** deploying, or e-mails show a broken image.
 6. Open `…/exec?page=admin` and add your session topics.
 7. **Sender (v2.1):** e-mails are sent from **itoc@sr.edu.sa**. The deploying account must be able to send as that address — either
    deploy from the itoc@sr.edu.sa account itself, or in the deploying account's Gmail add it under
    **Settings → Accounts → Send mail as** and confirm it. Then run any function once in the editor and approve the new Gmail permission.
    Admin → «إرسال نسخة تجريبية» shows which address was actually used.
-8. **Calendar invitations (v2.7):** invitations are created on the **itoc@sr.edu.sa** calendar so ITOC is the organizer.
+8. **Calendar invitations (v2.9):** invitations are created on the **itoc@sr.edu.sa** calendar so ITOC is the organizer.
    From the ITOC account share its calendar with the deploying account with **Make changes to events**.
    Then in the Sheet run **Coffee with IT → فحص المُرسِل والتقويم (ITOC)** — it reports what is still missing.
-9. **No Google Meet in invitations (v2.7):** in the Apps Script editor click **Services (+) → Google Calendar API → v3 → Identifier `Calendar` → Add**
+9. **No Google Meet in invitations (v2.9):** in the Apps Script editor click **Services (+) → Google Calendar API → v3 → Identifier `Calendar` → Add**
    (or paste the new `appsscript.json`). Without it the invitation still works but Google Meet may be attached.
 
 ## Publishing on GitHub Pages

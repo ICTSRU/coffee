@@ -1,5 +1,23 @@
 # Changelog — Coffee with IT
 
+## v2.9 — 2026-10-20
+- **New Coffee with IT logo everywhere** (cup with digital steam and circuit lines, «Coffee with IT · قهوة مع تقنية المعلومات»).
+  - Pages: booking page, rating page, admin dashboard and the GitHub landing page show the new cup on a white rounded tile
+    (embedded in the page, so it appears even before GitHub assets are updated).
+  - E-mails (confirmation, cancellation, reminder, thank-you + rating): hero uses `assets/cwit-badge.png` (52 px).
+    A new file name is used so Gmail's image cache cannot show the old logo.
+  - Browser tab / home-screen icon: `assets/cwit-favicon.png`.
+  - Awareness posters (Arabic + English, PNG + PDF): the old logo in the "Book a session" box was replaced.
+- Assets regenerated from the supplied artwork with a transparent background: `cwit-logo`, `cwit-logo-white`, `cwit-mark`,
+  `cwit-icon`, `cwit-mark-white` (kept for older e-mails). The old SVG versions of the previous logo were removed.
+
+## v2.8 — 2026-10-20
+- **Google Meet no longer attached to invitations (reworked).** Events are now inserted directly through the Calendar API with
+  `conferenceDataVersion=1` and no conference, which stops Calendar from auto-adding Meet; any Meet still attached is stripped
+  (two methods) before the attendee is added and the invitation is sent.
+- The menu check «فحص المُرسِل والتقويم (ITOC)» now also reports whether the Calendar API service is enabled and whether Meet
+  is still forced by the domain policy (test event created and removed).
+
 ## v2.7 — 2026-10-20
 - **Side booking summary removed.** The page is now a single centred column (max 820 px); the summary and the «تأكيد الحجز»
   button appear once, as step 5 after «بياناتك».

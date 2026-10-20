@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v2.7
+ * Coffee with IT — Booking System  ·  v2.9
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '2.7';
+const APP_VERSION = '2.9';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
@@ -46,20 +46,20 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.page === 'rate') {
     return HtmlService.createHtmlOutputFromFile('Rate')
       .setTitle('تقييم جلسة Coffee with IT')
-      .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
+      .setFaviconUrl(ASSET_URL + 'cwit-favicon.png')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   if (wantsAdmin) {
     return HtmlService.createHtmlOutputFromFile('Admin')
       .setTitle('لوحة إدارة حجوزات Coffee with IT')
-      .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
+      .setFaviconUrl(ASSET_URL + 'cwit-favicon.png')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('احجز جلسة Coffee with IT')
-    .setFaviconUrl(ASSET_URL + 'cwit-icon.png')
+    .setFaviconUrl(ASSET_URL + 'cwit-favicon.png')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -860,7 +860,7 @@ function layout_(o) {
       // hero
       '<tr><td style="background:' + o.accent + ';padding:26px 28px 24px;font-family:' + FONT + ';color:#ffffff;text-align:right">' +
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
-          '<td valign="middle" style="padding-left:10px"><img src="' + ASSET_URL + 'cwit-mark-white.png" alt="Coffee with IT" width="40" height="40" style="display:block;width:40px;height:40px;border:0"></td>' +
+          '<td valign="middle" style="padding-left:12px"><img src="' + ASSET_URL + 'cwit-badge.png" alt="Coffee with IT — قهوة مع تقنية المعلومات" width="52" height="52" style="display:block;width:52px;height:52px;border:0;border-radius:12px"></td>' +
           '<td valign="middle"><span style="display:inline-block;background:#6c3fa8;border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold">Coffee&nbsp;with&nbsp;IT&nbsp;·&nbsp;10&nbsp;min</span></td>' +
         '</tr></table>' +
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px"><tr>' +
@@ -1045,27 +1045,44 @@ function calendar_(s) {
 }
 
 /**
- * Creates the event with NO Google Meet link, then invites the attendee.
- * Google Calendar auto-attaches Meet to new events; the event is created without guests, its conferenceData is
- * removed through the Calendar advanced service, and only then is the attendee added with sendUpdates:'all' — so the
- * invitation e-mail never carries "Join with Google Meet". If the advanced service is unavailable, falls back to the
- * previous behaviour (invitation sent, Meet may appear) and logs a warning.
+ * Creates the booking event with NO Google Meet and sends the invitation.
+ *  1. The event is inserted through the Calendar API (advanced service) with conferenceDataVersion=1 and no
+ *     conferenceData — this stops Calendar from auto-attaching Meet — and with no guests, so nothing is sent yet.
+ *  2. If Meet was still attached (domain policy), it is stripped (patch to null, then full update without it).
+ *  3. Only then is the attendee added with sendUpdates:'all' → the invitation e-mail has no "Join with Google Meet".
+ * Returns the iCalUID (works with CalendarApp.getEventById for cancellation).
+ * Without the advanced service it falls back to CalendarApp (invitation sent, Meet may appear) and logs a warning.
  */
 function createInviteWithoutMeet_(cal, title, start, end, opts, email) {
-  const ev = cal.createEvent(title, start, end, opts);
-  try {
-    const calId = cal.getId(), evId = ev.getId().replace(/@google\.com$/, '');
-    const r = Calendar.Events.get(calId, evId);
-    delete r.conferenceData;
-    delete r.hangoutLink;
-    r.attendees = [{ email: email }];
-    Calendar.Events.update(r, calId, evId, { conferenceDataVersion: 1, sendUpdates: 'all' });
-    return ev.getId();
-  } catch (err) {
-    console.warn('Google Meet could not be removed (enable the Calendar advanced service): ' + err);
-    try { ev.deleteEvent(); } catch (e) {}
+  if (typeof Calendar === 'undefined') {
+    console.warn('Calendar advanced service is NOT enabled — Google Meet cannot be removed. Services (+) → Google Calendar API.');
     return cal.createEvent(title, start, end, Object.assign({ guests: email, sendInvites: true }, opts)).getId();
   }
+  const calId = cal.getId(), tz = Session.getScriptTimeZone();
+  const ev = Calendar.Events.insert({
+    summary: title, location: opts.location || '', description: opts.description || '',
+    start: { dateTime: start.toISOString(), timeZone: tz }, end: { dateTime: end.toISOString(), timeZone: tz },
+    guestsCanModify: false, guestsCanInviteOthers: false
+  }, calId, { conferenceDataVersion: 1, sendUpdates: 'none' });
+  stripMeet_(calId, ev.id);
+  Calendar.Events.patch({ attendees: [{ email: email }] }, calId, ev.id, { conferenceDataVersion: 1, sendUpdates: 'all' });
+  return ev.iCalUID || ev.id;
+}
+
+/** Removes any Google Meet conference from an event (two methods); true when none remains. */
+function stripMeet_(calId, eventId) {
+  const has = () => { const e = Calendar.Events.get(calId, eventId); return !!(e.conferenceData || e.hangoutLink); };
+  if (!has()) return true;
+  try { Calendar.Events.patch({ conferenceData: null }, calId, eventId, { conferenceDataVersion: 1, sendUpdates: 'none' }); } catch (e) { console.warn(e); }
+  if (!has()) return true;
+  try {
+    const r = Calendar.Events.get(calId, eventId);
+    delete r.conferenceData; delete r.hangoutLink;
+    Calendar.Events.update(r, calId, eventId, { conferenceDataVersion: 1, sendUpdates: 'none' });
+  } catch (e) { console.warn(e); }
+  const ok = !has();
+  if (!ok) console.warn('Google Meet is still attached — the domain policy adds it. Admin console → Apps → Google Workspace → Calendar → Sharing settings → Video conferencing: turn off automatic Meet.');
+  return ok;
 }
 
 /**
@@ -1089,6 +1106,17 @@ function checkSenderAndCalendar() {
       const t = new Date(Date.now() + 86400000), ev = cal.createEvent('Coffee with IT — اختبار الصلاحية', t, new Date(t.getTime() + 60000));
       ev.deleteEvent();
       out.push('✔ التقويم: الدعوات تُنشأ على تقويم ' + id + ' (المنظِّم: ' + cal.getName() + ')');
+      if (typeof Calendar === 'undefined') {
+        out.push('✖ Google Meet: خدمة Google Calendar API غير مفعّلة في المحرر — أضفها من Services (+) ثم انشر نسخة جديدة. حتى ذلك يظهر رابط Meet في الدعوة.');
+      } else {
+        const t2 = new Date(Date.now() + 2 * 86400000), tz = Session.getScriptTimeZone();
+        const e2 = Calendar.Events.insert({ summary: 'Coffee with IT — اختبار Meet', start: { dateTime: t2.toISOString(), timeZone: tz },
+          end: { dateTime: new Date(t2.getTime() + 60000).toISOString(), timeZone: tz } }, cal.getId(), { conferenceDataVersion: 1, sendUpdates: 'none' });
+        const clean = stripMeet_(cal.getId(), e2.id);
+        Calendar.Events.remove(cal.getId(), e2.id, { sendUpdates: 'none' });
+        out.push(clean ? '✔ Google Meet: لا يُضاف إلى الدعوات' :
+          '✖ Google Meet: سياسة النطاق تفرض إضافته — يلزم إيقافه من Admin console (Calendar › Video conferencing)');
+      }
     } catch (e) {
       out.push('✖ التقويم: تقويم ' + id + ' ظاهر لكن الصلاحية «عرض فقط» — غيّرها إلى «Make changes to events». الدعوات تصدر الآن من ' + me);
     }
