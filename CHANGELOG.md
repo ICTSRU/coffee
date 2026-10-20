@@ -1,5 +1,12 @@
 # Changelog — Coffee with IT
 
+## v2.1 — 2026-10-20
+- **All e-mails are now sent from itoc@sr.edu.sa** (was the deploying account, m.elmahdy@sr.edu.sa): booking confirmation,
+  cancellation, reminder and the thank-you + rating e-mail. Display name stays «Coffee with IT · ITOC»; replies still go to servicedesk@sr.edu.sa.
+- Sending moved from `MailApp` to `GmailApp` (one helper, `mail_`) so a "Send mail as" alias can be used. New setting `MailFrom` (default itoc@sr.edu.sa).
+- Safety fallback: if the deploying account cannot send as the configured address, the e-mail still goes out from the account itself
+  and a warning is logged; the admin test e-mail reports the sender actually used.
+
 ## v2.0 — 2026-10-19
 - **Rating e-mail fixed for Outlook for Windows**: the 1–5 choices broke into scattered boxes because Outlook ignores `display:block`,
   borders and radius on links. Each choice is now a fixed-size table cell carrying the border and background; all five are equal width and height.

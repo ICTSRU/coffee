@@ -1,4 +1,4 @@
-# Coffee with IT · v2.0
+# Coffee with IT · v2.1
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -29,14 +29,14 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 
 | Sheet | Notes |
 |---|---|
-| Settings | Session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to servicedesk@sr.edu.sa + m.elmahdy@sr.edu.sa; separate addresses with `;`), `AdminEmails` |
+| Settings | `MailFrom` (sender of every e-mail; default itoc@sr.edu.sa), session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to servicedesk@sr.edu.sa + m.elmahdy@sr.edu.sa; separate addresses with `;`), `AdminEmails` |
 | Slots | One row per slot; set `Active` to `FALSE` to close it |
 | Bookings | Adds the **Attendance** and **Topic** columns automatically on first use |
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v2.0
+## Updating the live app to v2.1
 
 1. Open the Sheet → **Extensions → Apps Script**.
 2. Replace the contents of **Code.gs** and **Index.html** with the files in `apps-script/`.
@@ -44,6 +44,10 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 4. Save → **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. The `/exec` URL does not change.
 5. Upload this folder's contents to the `coffee` repository so that `assets/` is live (the e-mail logos load from there).
 6. Open `…/exec?page=admin` and add your session topics.
+7. **Sender (v2.1):** e-mails are sent from **itoc@sr.edu.sa**. The deploying account must be able to send as that address — either
+   deploy from the itoc@sr.edu.sa account itself, or in the deploying account's Gmail add it under
+   **Settings → Accounts → Send mail as** and confirm it. Then run any function once in the editor and approve the new Gmail permission.
+   Admin → «إرسال نسخة تجريبية» shows which address was actually used.
 
 ## Publishing on GitHub Pages
 

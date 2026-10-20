@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v2.0
+ * Coffee with IT — Booking System  ·  v2.1
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
@@ -402,9 +402,8 @@ function sendThanksTest() {
   const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   const b = { id: 'CWI-TEST', name: 'تجربة', date: today, time: '10:00', endTime: addMinutes_('10:00', Number(s.SessionMinutes) || 10),
     topic: String(s.Topic || ''), modeLabel: 'حضوري' };
-  MailApp.sendEmail({ to: email, subject: '[تجربة] شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s),
-    name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' });
-  return { ok: true, to: email };
+  const from = mail_({ to: email, subject: '[تجربة] شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s) }, s);
+  return { ok: true, to: email, from: from };
 }
 
 /** Admin: turn on the hourly automation (reminders + thank-you e-mails). */
@@ -446,8 +445,7 @@ function thanksAndMark_(r, s) {
   const b = { id: r.row[COL.BookingId], name: r.row[COL.Name], date: r.row[COL.Date], time: r.row[COL.Time],
     endTime: addMinutes_(r.row[COL.Time], Number(s.SessionMinutes) || 10), topic: r.row[COL.Topic] || String(s.Topic || ''),
     modeLabel: r.row[COL.Mode] };
-  MailApp.sendEmail({ to: r.row[COL.Email], subject: 'شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة',
-    htmlBody: thanksHtml_(b, s), name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' });
+  mail_({ to: r.row[COL.Email], subject: 'شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s) }, s);
   sheet_(SHEETS.BOOKINGS).getRange(r.index + 1, COL.ThanksSentAt + 1).setNumberFormat('@')
     .setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'));
 }
@@ -522,6 +520,7 @@ function setup() {
     ['MaxActiveBookingsPerUser', '1', 'عدد الحجوزات القائمة المسموح بها لكل موظف'],
     ['OnsiteLocation', 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]', 'مكان الجلسة الحضورية'],
     ['ZoomLink', DEFAULT_ZOOM_LINK, 'يُرسل في البريد لمن يختار الحضور عن بُعد'],
+    ['MailFrom', DEFAULT_MAIL_FROM, 'عنوان المُرسِل لكل الرسائل (تسجيل/إلغاء/تذكير/شكر وتقييم) — يجب أن يكون حساب النشر نفسه أو اسمًا مستعارًا مُفعّلًا «إرسال بريد باسم»'],
     ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
     ['CreateCalendarEvents', 'TRUE', 'إنشاء موعد في التقويم ودعوة الموظف'],
     ['CalendarId', 'primary', 'معرّف التقويم أو primary'],
@@ -644,6 +643,10 @@ const ASSET_URL = SITE_URL + 'assets/';          // logos are served from GitHub
 // Blind copy of every booking e-mail. Settings › NotifyEmail overrides this list (separate addresses with ; or ,).
 const DEFAULT_COPY_EMAILS = ['servicedesk@sr.edu.sa', 'm.elmahdy@sr.edu.sa'];
 const MAIL_FROM_NAME = 'Coffee with IT · ITOC';
+// Sender address of every e-mail (registration, cancellation, reminder, thank-you + rating). Settings › MailFrom overrides it.
+// It must be the deploying account itself or a verified Gmail "Send mail as" alias of that account.
+const DEFAULT_MAIL_FROM = 'itoc@sr.edu.sa';
+const MAIL_REPLY_TO = 'servicedesk@sr.edu.sa';
 const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const C = { purple: '#501e8c', dark: '#3a1464', light: '#f0ebf8', blue: '#0a6eaa', blueLight: '#e6f3fa',
@@ -654,10 +657,41 @@ const FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;60
 
 /** Every booking e-mail goes to the attendee, with a blind copy (BCC) to the copy list. */
 function send_(to, subject, html, s) {
-  const msg = { to: to, subject: subject, htmlBody: html, name: MAIL_FROM_NAME, replyTo: 'servicedesk@sr.edu.sa' };
+  const msg = { to: to, subject: subject, htmlBody: html };
   const bcc = copyList_(s, to);
   if (bcc.length) msg.bcc = bcc.join(',');
-  MailApp.sendEmail(msg);
+  mail_(msg, s);
+}
+
+/** The configured sender: Settings › MailFrom or DEFAULT_MAIL_FROM. */
+function mailFrom_(s) {
+  const v = String((s && s.MailFrom) || '').trim().toLowerCase();
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? v : DEFAULT_MAIL_FROM;
+}
+
+/**
+ * Sends one e-mail from the ITOC address (GmailApp, so a "from" alias can be used).
+ * If the deploying account cannot send as that address, the message still goes out from the account itself
+ * (bookings never fail because of the sender) and a warning is written to the execution log.
+ * Returns the address actually used.
+ */
+function mail_(msg, s) {
+  const want = mailFrom_(s);
+  const me = String(Session.getEffectiveUser().getEmail() || '').toLowerCase();
+  const opts = { htmlBody: msg.htmlBody, name: MAIL_FROM_NAME, replyTo: MAIL_REPLY_TO };
+  if (msg.bcc) opts.bcc = msg.bcc;
+  let used = me;
+  if (want === me) {
+    used = want;
+  } else if (GmailApp.getAliases().map(a => String(a).toLowerCase()).indexOf(want) !== -1) {
+    opts.from = want; used = want;
+  } else {
+    console.warn('MailFrom ' + want + ' is not a "Send mail as" alias of ' + me + ' — sent from ' + me + ' instead.');
+  }
+  const text = String(msg.htmlBody || '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  GmailApp.sendEmail(msg.to, msg.subject, text, opts);
+  return used;
 }
 
 /** NotifyEmail (";" "," or spaces) or DEFAULT_COPY_EMAILS — valid, de-duplicated, never the attendee themself. */

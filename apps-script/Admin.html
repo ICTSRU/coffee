@@ -150,7 +150,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
 <path d="M30 182 Q90 196 150 182" stroke="#ffffff" stroke-opacity="0.7" stroke-width="8" stroke-linecap="round" fill="none"></path></svg></span>
     <div>
     <h1>لوحة إدارة حجوزات <span class="en">Coffee with IT</span></h1>
-    <p><span id="adminWho">…</span> · <span class="en" id="ver">v2.0</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    <p><span id="adminWho">…</span> · <span class="en" id="ver">v2.1</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
     </div>
   </div>
   <div class="acts">
@@ -300,7 +300,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         rating: [5, 4, 5, 3, 4, 5, 2, 5][i % 8], comment: comments[i % 5], at: b.date + ' 14:0' + (i % 9) };
     });
     var auto = false;
-    function pack() { return { ratings: ratings.slice(), automation: auto, autoThanks: true, rate: { labels: ['غير راضٍ إطلاقًا','غير راضٍ','محايد','راضٍ','راضٍ جدًا'] }, admin: 'm.elmahdy@sr.edu.sa', version: '2.0', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    function pack() { return { ratings: ratings.slice(), automation: auto, autoThanks: true, rate: { labels: ['غير راضٍ إطلاقًا','غير راضٍ','محايد','راضٍ','راضٍ جدًا'] }, admin: 'm.elmahdy@sr.edu.sa', version: '2.1', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
       topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#' }; }
     return {
       getAdminData: function () { return Promise.resolve(pack()); },
@@ -309,7 +309,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       setTopicActive: function (n, a) { topics.forEach(function (t) { if (t.name === n) t.active = a; }); return Promise.resolve(topics.map(function (t) { return Object.assign({}, t); })); },
       sendThanks: function (id) { list.forEach(function (b) { if (b.id === id) b.thanksSentAt = new Date().toISOString().slice(0, 16).replace('T', ' '); }); return Promise.resolve(pack()); },
       sendPendingThanks: function () { var n = 0; list.forEach(function (b) { if (b.ended && b.status === 'Confirmed' && !b.thanksSentAt && b.attendance !== 'No-show') { b.thanksSentAt = 'now'; n++; } }); var d = pack(); d.sentCount = n; return Promise.resolve(d); },
-      sendThanksTest: function () { return Promise.resolve({ ok: true, to: 'm.elmahdy@sr.edu.sa' }); },
+      sendThanksTest: function () { return Promise.resolve({ ok: true, to: 'm.elmahdy@sr.edu.sa', from: 'itoc@sr.edu.sa' }); },
       enableAutomation: function () { auto = true; return Promise.resolve({ automation: true }); },
       adminCancel: function (id) { list.forEach(function (b) { if (b.id === id) b.status = 'Cancelled'; }); return Promise.resolve(pack()); }
     };
@@ -601,7 +601,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       .catch(function (e) { msg(errText(e)); }).then(function () { btn.disabled = false; });
   });
   $('sendTest').addEventListener('click', function () {
-    call('sendThanksTest').then(function (r) { msg('أُرسلت نسخة تجريبية إلى ' + r.to + '.', 'ok'); }).catch(function (e) { msg(errText(e)); });
+    call('sendThanksTest').then(function (r) { msg('أُرسلت نسخة تجريبية إلى ' + r.to + (r.from ? ' من ' + r.from : '') + '.', (!r.from || r.from === 'itoc@sr.edu.sa') ? 'ok' : undefined); }).catch(function (e) { msg(errText(e)); });
   });
   $('enableAuto').addEventListener('click', function () {
     call('enableAutomation').then(function (r) { data.automation = r.automation; render(); msg('تم تفعيل الإرسال التلقائي كل ساعة: التذكير قبل الجلسة، والشكر والتقييم بعدها.', 'ok'); })
