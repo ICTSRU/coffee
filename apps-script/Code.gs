@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v2.1
+ * Coffee with IT — Booking System  ·  v2.3
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.3';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
@@ -704,7 +704,7 @@ function copyList_(s, to) {
 }
 
 function sendConfirmation_(email, b, s) {
-  send_(email, '✅ تأكيد حجز جلسة Coffee with IT — ' + arDate_(b.date) + ' · ' + b.time, confirmationHtml_(b, s), s);
+  send_(email, 'تأكيد حجز جلسة Coffee with IT — ' + arDate_(b.date) + ' · ' + b.time, confirmationHtml_(b, s), s);
 }
 
 function sendCancellation_(email, r, s) {
@@ -718,40 +718,56 @@ function sendReminderMail_(r, s) {
     mode: zoom ? 'zoom' : 'onsite', modeLabel: r[COL.Mode],
     where: zoom ? zoomLink_(s) : String(s.OnsiteLocation || ''),
     endTime: addMinutes_(r[COL.Time], Number(s.SessionMinutes) || 10) };
-  send_(r[COL.Email], '⏰ تذكير: جلسة Coffee with IT اليوم الساعة ' + b.time, reminderHtml_(b, s), s);
+  send_(r[COL.Email], 'تذكير: جلسة Coffee with IT اليوم الساعة ' + b.time, reminderHtml_(b, s), s);
 }
 
 /* ---------- templates (pure: no Apps Script services, easy to preview) ---------- */
 
 function confirmationHtml_(b, s) {
   const mins = Number(s.SessionMinutes) || 10;
+  const topic = b.topic || s.Topic || '';
   const calendarInvite = String(s.CreateCalendarEvents).toUpperCase() === 'TRUE';
+  const zoom = b.mode === 'zoom';
   const body =
     p_('مرحبًا <b>' + esc_(b.name) + '</b>،') +
-    p_('يسعدنا تأكيد حجزك لجلسة <b>Coffee with IT</b>' + ((b.topic || s.Topic) ? ' حول <b>' + esc_(b.topic || s.Topic) + '</b>' : '') + '.') +
+    p_('يسعدنا إبلاغك بأنه <b>تم تأكيد حجزك</b> في جلسة <b>Coffee&nbsp;with&nbsp;IT</b>' +
+      (topic ? ' بعنوان «<b>' + keepLatin_(esc_(topic)) + '</b>»' : '') + '، ونتطلع إلى لقائك.') +
+    sectionTitle_('تفاصيل الحجز') +
     detailsCard_([
-      ['الموضوع', esc_(b.topic || s.Topic || '')],
-      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
+      ['الموضوع', keepLatin_(esc_(topic))],
       ['التاريخ', esc_(arDate_(b.date))],
-      ['الوقت', timeRange_(b) + ' <span style="color:' + C.muted + ';font-weight:normal">· مدة الجلسة ' + mins + ' دقائق</span>'],
-      ['طريقة الحضور', modePill_(b.mode, b.modeLabel)]
+      ['الوقت', timeRange_(b)],
+      ['مدة الجلسة', mins + ' دقائق'],
+      ['طريقة الحضور', modePill_(b.mode, b.modeLabel)],
+      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px">' + esc_(b.id) + '</span>']
     ]) +
     whereBlock_(b) +
-    (b.mode === 'zoom' ? '' : (calendarInvite
-      ? note_('📅 أرسلنا إليك أيضًا دعوة في تقويم Google بموعد الجلسة.')
-      : '<div style="margin:18px 0 4px">' + button_('أضف الموعد إلى التقويم', calendarLink_(b, s), C.blue) + '</div>')) +
-    '<div style="margin:22px 0 6px;font-weight:bold;color:' + C.dark + '">قبل الجلسة</div>' +
-    '<ul style="margin:0;padding:0 18px 0 0;color:' + C.ink + '">' +
-      (b.mode === 'zoom'
-        ? '<li>تأكد من تثبيت تطبيق Zoom وتجربة الصوت مسبقًا.</li><li>ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.</li>'
-        : '<li>نرجو الحضور قبل الموعد بدقيقتين.</li><li>يمكنك إحضار جهازك المحمول لتطبيق الإعدادات مباشرة.</li>') +
-    '</ul>' +
-    '<div style="margin:24px 0 0;border-top:1px solid ' + C.line + ';padding-top:18px">' +
-      '<span style="color:' + C.muted + ';font-size:14px">تغيّرت ظروفك؟ </span>' +
-      '<a href="' + SITE_URL + '" style="color:' + C.purple + ';font-weight:bold;font-size:14px">إدارة الحجز أو إلغاؤه</a>' +
-    '</div>';
+    (calendarInvite
+      ? note_('أرسلنا إليك أيضًا دعوة في تقويم Google بموعد الجلسة، يُرجى قبولها ليظهر الموعد في تقويمك.')
+      : '<div style="margin:18px 0 4px">' + button_('أضف الموعد إلى التقويم', calendarLink_(b, s), C.blue) + '</div>') +
+    sectionTitle_('قبل الجلسة') +
+    checklist_(zoom
+      ? ['تأكد من تثبيت تطبيق Zoom وتجربة الصوت والصورة مسبقًا.', 'ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.']
+      : ['نرجو الحضور قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.']) +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;border-top:1px solid ' + C.line + '"><tr>' +
+      '<td style="padding-top:18px;font-size:14px;color:' + C.muted + '">تغيّرت ظروفك؟ يمكنك إدارة الحجز أو إلغاؤه ليُتاح الموعد لزملائك.</td></tr>' +
+      '<tr><td style="padding-top:10px">' + button_('إدارة الحجز', SITE_URL, C.purple) + '</td></tr></table>';
   return layout_({ preheader: 'حجزك مؤكد: ' + arDate_(b.date) + ' الساعة ' + b.time + ' — ' + b.modeLabel,
-    icon: '✓', title: 'تم تأكيد حجزك', subtitle: arDate_(b.date) + ' · ' + b.time, accent: C.purple, body: body });
+    title: 'تم تأكيد حجزك', subtitle: arDate_(b.date) + ' · الساعة ' + b.time, accent: C.purple, body: body });
+}
+
+function sectionTitle_(t) {
+  return '<div style="margin:22px 0 8px;font-weight:bold;font-size:16px;color:' + C.dark + '">' + esc_(t) + '</div>';
+}
+
+/** Numbered checklist as a table (no emoji, no list bullets that some clients misplace in RTL). */
+function checklist_(items) {
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + items.map(function (t, i) {
+    return '<tr><td width="30" valign="top" style="padding:4px 0">' +
+      '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="22" height="22" align="center" valign="middle" bgcolor="' + C.light + '" ' +
+      'style="width:22px;height:22px;background:' + C.light + ';border-radius:11px;color:' + C.purple + ';font-size:12px;font-weight:bold;line-height:22px;text-align:center">' + (i + 1) + '</td></tr></table></td>' +
+      '<td valign="top" style="padding:4px 0;color:' + C.ink + ';font-size:15px">' + esc_(t) + '</td></tr>';
+  }).join('') + '</table>';
 }
 
 function cancellationHtml_(b, s) {
@@ -766,7 +782,7 @@ function cancellationHtml_(b, s) {
     ]) +
     p_('يسعدنا حجزك لموعد آخر في أي وقت.') +
     '<div style="margin:6px 0 4px">' + button_('احجز موعدًا آخر', SITE_URL, C.purple) + '</div>';
-  return layout_({ preheader: 'تم إلغاء حجزك ' + b.id, icon: '✕', title: 'تم إلغاء الحجز',
+  return layout_({ preheader: 'تم إلغاء حجزك ' + b.id, title: 'تم إلغاء الحجز',
     subtitle: arDate_(b.date) + ' · ' + b.time, accent: C.dark, body: body });
 }
 
@@ -780,7 +796,7 @@ function reminderHtml_(b, s) {
       ['طريقة الحضور', modePill_(b.mode, b.modeLabel)]
     ]) +
     whereBlock_(b);
-  return layout_({ preheader: 'جلستك اليوم الساعة ' + b.time, icon: '⏰', title: 'تذكير بموعد جلستك',
+  return layout_({ preheader: 'جلستك اليوم الساعة ' + b.time, title: 'تذكير بموعد جلستك',
     subtitle: 'اليوم · ' + b.time, accent: C.blue, body: body });
 }
 
@@ -813,7 +829,7 @@ function thanksHtml_(b, s) {
       ['الجلسة', esc_(arDate_(b.date)) + ' · ' + timeRange_(b)],
       ['طريقة الحضور', esc_(b.modeLabel || '')]
     ]);
-  return layout_({ preheader: 'شكرًا لحضورك — ' + RATE_Q_AR, icon: '★', title: 'شكرًا لحضورك',
+  return layout_({ preheader: 'شكرًا لحضورك — ' + RATE_Q_AR, title: 'شكرًا لحضورك',
     subtitle: 'قيّم جلسة Coffee with IT · Rate your session', accent: C.purple, body: body });
 }
 
@@ -840,11 +856,10 @@ function layout_(o) {
       '<tr><td style="background:' + o.accent + ';padding:26px 28px 24px;font-family:' + FONT + ';color:#ffffff;text-align:right">' +
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
           '<td valign="middle" style="padding-left:10px"><img src="' + ASSET_URL + 'cwit-mark-white.png" alt="Coffee with IT" width="40" height="40" style="display:block;width:40px;height:40px;border:0"></td>' +
-          '<td valign="middle"><span style="display:inline-block;background:#6c3fa8;border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold;direction:ltr">Coffee with IT · 10 min</span></td>' +
+          '<td valign="middle"><span style="display:inline-block;background:#6c3fa8;border-radius:4px;padding:3px 12px;font-size:13px;font-weight:bold">Coffee&nbsp;with&nbsp;IT&nbsp;·&nbsp;10&nbsp;min</span></td>' +
         '</tr></table>' +
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px"><tr>' +
-          '<td width="34" height="34" align="center" valign="middle" bgcolor="#ffffff" style="width:34px;height:34px;background:#ffffff;border-radius:17px;color:' + o.accent + ';font-size:18px;line-height:34px;font-weight:bold;text-align:center">' + o.icon + '</td>' +
-          '<td valign="middle" style="padding-right:10px;font-family:' + FONT + ';font-size:26px;line-height:36px;font-weight:bold;color:#ffffff">' + esc_(o.title) + '</td>' +
+          '<td valign="middle" style="font-family:' + FONT + ';font-size:26px;line-height:36px;font-weight:bold;color:#ffffff">' + esc_(o.title) + '</td>' +
         '</tr></table>' +
         '<div style="font-size:15px;margin-top:4px;opacity:0.92">' + esc_(o.subtitle) + '</div>' +
       '</td></tr>' +
@@ -883,7 +898,7 @@ function detailsCard_(rows) {
 function modePill_(mode, label) {
   const zoom = mode === 'zoom' || label === MODE_LABEL.zoom;
   return '<span style="display:inline-block;background:' + (zoom ? C.blueLight : C.light) + ';color:' + (zoom ? '#08537f' : C.dark) +
-    ';padding:2px 12px;border-radius:4px">' + (zoom ? '🎥 ' : '📍 ') + esc_(label || '') + '</span>';
+    ';padding:2px 12px;border-radius:4px">' + esc_(label || '') + '</span>';
 }
 
 function whereBlock_(b) {
@@ -891,15 +906,19 @@ function whereBlock_(b) {
     const link = /^https?:\/\//i.test(b.where || '') ? b.where : DEFAULT_ZOOM_LINK;
     const id = zoomMeetingId_(link);
     return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-      '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">🎥 رابط اجتماع Zoom</div>' +
+      '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">رابط اجتماع Zoom</div>' +
       button_('انضم إلى الجلسة عبر Zoom', link, C.blue) +
-      (id ? '<div style="margin-top:10px;font-size:14px;color:' + C.ink + '">رقم الاجتماع: <b dir="ltr" style="font-family:Consolas,Menlo,monospace;letter-spacing:0.5px">' + ltr_(esc_(id)) + '</b></div>' : '') +
+      (id ? '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px"><tr>' +
+        '<td style="font-size:14px;color:' + C.ink + ';padding-left:8px">رقم الاجتماع:</td>' +
+        // own cell = own bidi paragraph: the number groups never follow Arabic letters, so they keep their order
+        '<td style="font-size:14px;color:' + C.ink + ';font-family:Consolas,Menlo,monospace;font-weight:bold;letter-spacing:0.5px">' + esc_(id) + '</td>' +
+      '</tr></table>' : '') +
       '<div style="font-size:12px;color:' + C.muted + ';margin-top:6px;direction:ltr;text-align:left;word-break:break-all">' +
         '<a href="' + esc_(link) + '" style="color:' + C.muted + '">' + esc_(link) + '</a></div>' +
       '</div>';
   }
   return '<div style="background:' + C.light + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">📍 مكان الجلسة</div>' +
+    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">مكان الجلسة</div>' +
     '<div>' + esc_(b.where || '') + '</div></div>';
 }
 
@@ -909,20 +928,17 @@ function zoomLink_(s) {
   return /^https?:\/\//i.test(v) ? v : DEFAULT_ZOOM_LINK;
 }
 
-/** "81335191824" → "813 3519 1824" */
+/** "81335191824" → "813-3519-1824" (hyphens keep the groups in order inside Arabic text) */
 function zoomMeetingId_(link) {
   const m = String(link).match(/\/j\/(\d{9,11})/);
   if (!m) return '';
   const d = m[1];
-  return d.length === 11 ? d.slice(0, 3) + ' ' + d.slice(3, 7) + ' ' + d.slice(7) : d.replace(/(\d{3})(\d{3})(\d+)/, '$1 $2 $3');
+  return d.length === 11 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.replace(/(\d{3})(\d{3})(\d+)/, '$1-$2-$3');
 }
-
-/** Wraps text in Unicode LRE…PDF marks: keeps left-to-right order inside Arabic text even when a mail client strips dir="ltr". */
-function ltr_(text) { return '\u202A' + text + '\u202C'; }
 
 /** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */
 function timeRange_(b) {
-  return 'من&nbsp;<span dir="ltr">' + ltr_(esc_(b.time)) + '</span>&nbsp;إلى&nbsp;<span dir="ltr">' + ltr_(esc_(b.endTime)) + '</span>';
+  return 'من&nbsp;<b>' + esc_(b.time) + '</b>&nbsp;إلى&nbsp;<b>' + esc_(b.endTime) + '</b>';
 }
 
 function button_(text, href, color) {

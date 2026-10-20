@@ -1,5 +1,16 @@
 # Changelog — Coffee with IT
 
+## v2.3 — 2026-10-20
+- Booking confirmation (on-site): removed the checklist item «أحضر جهازك المحمول لتطبيق الإعدادات مباشرة أثناء الجلسة». The list now has two items.
+
+## v2.2 — 2026-10-20
+- **Question marks removed from all e-mails.** Emoji (✅ ⏰ 📅 📍 🎥 ✓ ✕ ★) and hidden Unicode direction marks showed as «?» in some
+  mail clients (Outlook for Windows). They are gone from every subject, hero and body; the hero now shows the Coffee with IT mark and title only.
+- **Booking confirmation e-mail redesigned**: clearer opening, "تفاصيل الحجز" card (topic, date, time, duration on its own row, attendance mode,
+  booking number), numbered "قبل الجلسة" checklist (works in RTL in every client), and a «إدارة الحجز» button.
+- Times read «من 11:00 إلى 11:10» without hidden marks; the Zoom meeting ID is shown as 813-3519-1824 so its groups never reverse.
+- English words in the topic (e.g. "Read AI") stay attached to the preceding Arabic word with a proper space in the details card.
+
 ## v2.1 — 2026-10-20
 - **All e-mails are now sent from itoc@sr.edu.sa** (was the deploying account, m.elmahdy@sr.edu.sa): booking confirmation,
   cancellation, reminder and the thank-you + rating e-mail. Display name stays «Coffee with IT · ITOC»; replies still go to servicedesk@sr.edu.sa.
