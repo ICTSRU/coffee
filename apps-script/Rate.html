@@ -136,7 +136,7 @@ footer .in{max-width:760px;margin:0 auto;padding:16px;display:flex;justify-conte
     });
   }
   var Demo = { saved: null,
-    getRateData: function (i) { return Promise.resolve({ version: '2.3', ended: true, previous: Demo.saved,
+    getRateData: function (i) { return Promise.resolve({ version: '2.7', ended: true, previous: Demo.saved,
       booking: { id: i || 'CWI-DEMO', name: 'Demo User', dateLabel: 'الثلاثاء 20 أكتوبر 2026', time: '11:45', endTime: '11:55', topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', modeLabel: 'عن بُعد (Zoom)' },
       q: { ar: 'ما مدى رضاك العام عن الجلسة؟', en: 'Overall, how satisfied were you with the session?', open_ar: 'ما مقترحاتك لتحسين جلسات Coffee with IT؟', open_en: 'What would you suggest to improve Coffee with IT sessions?',
         labels: [['غير راضٍ إطلاقًا','Very dissatisfied'],['غير راضٍ','Dissatisfied'],['محايد','Neutral'],['راضٍ','Satisfied'],['راضٍ جدًا','Very satisfied']] } }); },

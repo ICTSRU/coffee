@@ -1,5 +1,31 @@
 # Changelog — Coffee with IT
 
+## v2.7 — 2026-10-20
+- **Side booking summary removed.** The page is now a single centred column (max 820 px); the summary and the «تأكيد الحجز»
+  button appear once, as step 5 after «بياناتك».
+- **«حجوزاتي القائمة»** moved from the side panel to a card above step 1, shown only when the user has an active booking (with the cancel button).
+
+## v2.6 — 2026-10-20
+- **Fixed «يرجى اختيار موضوع الجلسة من القائمة» after a topic was selected.** The server compared the trimmed topic with the
+  untrimmed Topics sheet value, so a trailing/double space or invisible character rejected a valid choice. Topics are now
+  normalised (spaces, non-breaking spaces, invisible marks, Unicode form) on both sides; adding/toggling topics uses the same rule.
+- **Booking summary added at the end of the page** (step 5, after «بياناتك»): topic, date, time, attendance mode, name and
+  department, with its own «تأكيد الحجز» button and a hint until the required fields are complete. It stays in sync with the side summary.
+
+## v2.5 — 2026-10-20
+- **Google Meet removed from calendar invitations.** The event is created without guests, Google Meet (conferenceData) is stripped
+  through the Calendar advanced service, then the attendee is added and the invitation is sent — the e-mail no longer shows
+  "Join with Google Meet", meeting link or dial-in numbers. The Zoom link stays in the location and description.
+- `appsscript.json` enables the **Google Calendar API v3** advanced service (identifier `Calendar`).
+- Fallback: if the advanced service is not enabled, the invitation is still sent the previous way and a warning is logged.
+
+## v2.4 — 2026-10-20
+- **Calendar invitations now come from ITOC**: booking events are created on the itoc@sr.edu.sa calendar (organizer = ITOC)
+  instead of the deploying account's calendar. Settings › CalendarId `primary` or empty now means itoc@sr.edu.sa; `me` keeps the old behaviour.
+- The shared ITOC calendar is subscribed automatically the first time it is used.
+- No more silent fallback: if the ITOC calendar is not shared with edit rights, a warning is logged.
+- New menu item **فحص المُرسِل والتقويم (ITOC)** checks the e-mail sender alias and write access to the ITOC calendar and says exactly what is missing.
+
 ## v2.3 — 2026-10-20
 - Booking confirmation (on-site): removed the checklist item «أحضر جهازك المحمول لتطبيق الإعدادات مباشرة أثناء الجلسة». The list now has two items.
 

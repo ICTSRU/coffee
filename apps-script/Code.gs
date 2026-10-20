@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v2.3
+ * Coffee with IT — Booking System  ·  v2.7
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.7';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings' };
 
@@ -94,9 +94,13 @@ function book(payload) {
   const dept = clean_(p.department, 120);
   const ext = clean_(p.extension, 20);
   const notes = clean_(p.notes, 300);
-  const topic = clean_(p.topic, 150);
+  // Compare normalised text: extra/trailing spaces, non-breaking or invisible characters in the Topics sheet
+  // (or in the browser value) must not reject a topic the user picked from the list.
   const activeTopics = topicRows_().filter(t => t.active).map(t => t.name);
-  if (activeTopics.length && activeTopics.indexOf(topic) === -1) throw new Error('يرجى اختيار موضوع الجلسة من القائمة.');
+  const wanted = topicKey_(clean_(p.topic, 300));
+  const topic = activeTopics.filter(t => topicKey_(t) === wanted)[0] || norm_(clean_(p.topic, 150));
+  if (activeTopics.length && activeTopics.map(topicKey_).indexOf(wanted) === -1)
+    throw new Error('الموضوع المختار لم يعد متاحًا — حدّث الصفحة واختر موضوعًا من القائمة.');
   const mode = p.mode === 'zoom' ? 'zoom' : (p.mode === 'onsite' ? 'onsite' : '');
   if (!name || !dept || !mode || !/^\d{4}-\d{2}-\d{2}$/.test(p.date || '') || !/^\d{2}:\d{2}$/.test(p.time || '')) {
     throw new Error('بيانات الحجز غير مكتملة.');
@@ -129,16 +133,15 @@ function book(payload) {
     let eventId = '';
     if (String(s.CreateCalendarEvents).toUpperCase() === 'TRUE') {
       try {
-        const ev = calendar_(s).createEvent('Coffee with IT — ' + name, start, end, {
-          guests: email,
-          sendInvites: true,
+        const cal = calendar_(s);
+        const evOpts = {
           location: where,
           description: 'جلسة Coffee with IT (' + sessionMin + ' دقائق)\n' +
             'الموضوع: ' + (topic || s.Topic || '') + '\n' +
             'طريقة الحضور: ' + MODE_LABEL[mode] + '\n' +
             'رقم الحجز: ' + id + (mode === 'zoom' ? '\nرابط Zoom: ' + where : '') + (notes ? '\nملاحظات: ' + notes : '')
-        });
-        eventId = ev.getId();
+        };
+        eventId = createInviteWithoutMeet_(cal, 'Coffee with IT — ' + name, start, end, evOpts, email);
       } catch (err) {
         console.warn('Calendar event not created: ' + err);
       }
@@ -263,11 +266,11 @@ function adminCancel(id) {
 /** Adds a session topic (admin). Returns the full topic list. */
 function addTopic(name) {
   const email = requireAdmin_();
-  const t = clean_(name, 150);
+  const t = norm_(clean_(name, 150));
   if (!t) throw new Error('اكتب اسم الموضوع.');
   const lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
-    if (topicRows_().some(x => x.name === t)) throw new Error('هذا الموضوع موجود بالفعل.');
+    if (topicRows_().some(x => topicKey_(x.name) === topicKey_(t))) throw new Error('هذا الموضوع موجود بالفعل.');
     const sh = topicsSheet_();
     sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setNumberFormat('@').setValues([[t, 'TRUE',
       Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'), email]]);
@@ -281,7 +284,7 @@ function setTopicActive(name, active) {
   const sh = topicsSheet_();
   const vals = sh.getDataRange().getDisplayValues();
   for (let i = 1; i < vals.length; i++) {
-    if (vals[i][0] === name) { sh.getRange(i + 1, 2).setNumberFormat('@').setValue(active ? 'TRUE' : 'FALSE'); return topicRows_(); }
+    if (topicKey_(vals[i][0]) === topicKey_(name)) { sh.getRange(i + 1, 2).setNumberFormat('@').setValue(active ? 'TRUE' : 'FALSE'); return topicRows_(); }
   }
   throw new Error('الموضوع غير موجود.');
 }
@@ -298,8 +301,8 @@ function topicsSheet_() {
 }
 
 function topicRows_() {
-  return topicsSheet_().getDataRange().getDisplayValues().slice(1).filter(r => r[0])
-    .map(r => ({ name: r[0], active: String(r[1]).toUpperCase() !== 'FALSE', createdAt: r[2] || '', createdBy: r[3] || '' }));
+  return topicsSheet_().getDataRange().getDisplayValues().slice(1).filter(r => norm_(r[0]))
+    .map(r => ({ name: norm_(r[0]), active: String(r[1]).toUpperCase() !== 'FALSE', createdAt: r[2] || '', createdBy: r[3] || '' }));
 }
 
 function isAdmin_(email) {
@@ -500,6 +503,8 @@ function onOpen() {
     .addItem('2) توليد المواعيد من الإعدادات', 'generateSlots')
     .addSeparator()
     .addItem('تفعيل الإرسال التلقائي: التذكير + الشكر والتقييم (كل ساعة)', 'installReminderTrigger')
+    .addSeparator()
+    .addItem('فحص المُرسِل والتقويم (ITOC)', 'checkSenderAndCalendar')
     .addToUi();
 }
 
@@ -523,7 +528,7 @@ function setup() {
     ['MailFrom', DEFAULT_MAIL_FROM, 'عنوان المُرسِل لكل الرسائل (تسجيل/إلغاء/تذكير/شكر وتقييم) — يجب أن يكون حساب النشر نفسه أو اسمًا مستعارًا مُفعّلًا «إرسال بريد باسم»'],
     ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
     ['CreateCalendarEvents', 'TRUE', 'إنشاء موعد في التقويم ودعوة الموظف'],
-    ['CalendarId', 'primary', 'معرّف التقويم أو primary'],
+    ['CalendarId', DEFAULT_CALENDAR_ID, 'التقويم الذي تُنشأ عليه الدعوات (المنظِّم) — itoc@sr.edu.sa، أو me لتقويم حساب النشر'],
     ['AdminEmails', '', 'مسؤولون إضافيون للوحة الإدارة (مفصولون بفواصل) — m.elmahdy@sr.edu.sa مسؤول دائمًا'],
     ['AutoThanks', 'TRUE', 'إرسال رسالة الشكر والتقييم تلقائيًا بعد انتهاء الجلسة (يتطلب تفعيل الإرسال التلقائي)'],
     ['ThanksDelayMinutes', '30', 'بعد كم دقيقة من انتهاء الجلسة تُرسل رسالة الشكر'],
@@ -1018,10 +1023,80 @@ function ensureSheet_(name, headers, rows) {
   return sh;
 }
 
+// Invitations are organised by the owner of the calendar the event is created on, so bookings go on the ITOC calendar.
+// Settings › CalendarId overrides it; "me" uses the deploying account's own calendar.
+const DEFAULT_CALENDAR_ID = 'itoc@sr.edu.sa';
+
+function calendarId_(s) {
+  const v = String((s && s.CalendarId) || '').trim();
+  return (!v || v.toLowerCase() === 'primary') ? DEFAULT_CALENDAR_ID : v;
+}
+
+/** The ITOC calendar (subscribing to it once if it is shared but not yet in the list); falls back to the own calendar with a warning. */
 function calendar_(s) {
-  const id = String(s.CalendarId || 'primary');
-  return (id === 'primary' ? CalendarApp.getDefaultCalendar() : CalendarApp.getCalendarById(id)) ||
-    CalendarApp.getDefaultCalendar();
+  const id = calendarId_(s);
+  if (id.toLowerCase() === 'me') return CalendarApp.getDefaultCalendar();
+  let cal = CalendarApp.getCalendarById(id);
+  if (!cal) { try { cal = CalendarApp.subscribeToCalendar(id, { hidden: false }); } catch (e) { cal = null; } }
+  if (cal) return cal;
+  console.warn('Calendar ' + id + ' is not shared with ' + Session.getEffectiveUser().getEmail() +
+    ' ("Make changes to events") — invitation created on the own calendar instead.');
+  return CalendarApp.getDefaultCalendar();
+}
+
+/**
+ * Creates the event with NO Google Meet link, then invites the attendee.
+ * Google Calendar auto-attaches Meet to new events; the event is created without guests, its conferenceData is
+ * removed through the Calendar advanced service, and only then is the attendee added with sendUpdates:'all' — so the
+ * invitation e-mail never carries "Join with Google Meet". If the advanced service is unavailable, falls back to the
+ * previous behaviour (invitation sent, Meet may appear) and logs a warning.
+ */
+function createInviteWithoutMeet_(cal, title, start, end, opts, email) {
+  const ev = cal.createEvent(title, start, end, opts);
+  try {
+    const calId = cal.getId(), evId = ev.getId().replace(/@google\.com$/, '');
+    const r = Calendar.Events.get(calId, evId);
+    delete r.conferenceData;
+    delete r.hangoutLink;
+    r.attendees = [{ email: email }];
+    Calendar.Events.update(r, calId, evId, { conferenceDataVersion: 1, sendUpdates: 'all' });
+    return ev.getId();
+  } catch (err) {
+    console.warn('Google Meet could not be removed (enable the Calendar advanced service): ' + err);
+    try { ev.deleteEvent(); } catch (e) {}
+    return cal.createEvent(title, start, end, Object.assign({ guests: email, sendInvites: true }, opts)).getId();
+  }
+}
+
+/**
+ * Menu / editor: checks the sender and the calendar and says exactly what is missing.
+ * Creates and deletes a 1-minute test event (no guests) to prove write access to the ITOC calendar.
+ */
+function checkSenderAndCalendar() {
+  const s = getSettings_();
+  const me = String(Session.getEffectiveUser().getEmail() || '').toLowerCase();
+  const from = mailFrom_(s), id = calendarId_(s), out = [];
+  const aliases = GmailApp.getAliases().map(a => String(a).toLowerCase());
+  out.push(from === me || aliases.indexOf(from) !== -1
+    ? '✔ البريد: الرسائل تُرسل من ' + from
+    : '✖ البريد: ' + from + ' ليس عنوان «إرسال بريد باسم» مفعّلًا في ' + me + ' — الرسائل تُرسل من ' + me);
+  let cal = CalendarApp.getCalendarById(id);
+  if (!cal) { try { cal = CalendarApp.subscribeToCalendar(id, { hidden: false }); } catch (e) { cal = null; } }
+  if (!cal) {
+    out.push('✖ التقويم: لا يمكن الوصول إلى تقويم ' + id + ' — شاركه من حساب ITOC مع ' + me + ' بصلاحية «Make changes to events». الدعوات تصدر الآن من ' + me);
+  } else {
+    try {
+      const t = new Date(Date.now() + 86400000), ev = cal.createEvent('Coffee with IT — اختبار الصلاحية', t, new Date(t.getTime() + 60000));
+      ev.deleteEvent();
+      out.push('✔ التقويم: الدعوات تُنشأ على تقويم ' + id + ' (المنظِّم: ' + cal.getName() + ')');
+    } catch (e) {
+      out.push('✖ التقويم: تقويم ' + id + ' ظاهر لكن الصلاحية «عرض فقط» — غيّرها إلى «Make changes to events». الدعوات تصدر الآن من ' + me);
+    }
+  }
+  const msg = out.join('\n');
+  console.log(msg);
+  safeAlert_(msg);
+  return msg;
 }
 
 function toDateTime_(date, time) {
@@ -1040,6 +1115,14 @@ function toMin_(v) {
 }
 
 function pad_(n) { return (n < 10 ? '0' : '') + n; }
+
+/** Unicode NFC, invisible marks removed, any run of spaces (incl. non-breaking) → one space, trimmed. */
+function norm_(v) {
+  return String(v == null ? '' : v).normalize('NFC').replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
+    .replace(/[\s\u00A0]+/g, ' ').trim();
+}
+/** Matching key for topics: normalised and lower-case. */
+function topicKey_(v) { return norm_(v).toLowerCase(); }
 
 function clean_(v, max) { return String(v == null ? '' : v).replace(/[<>]/g, '').trim().slice(0, max); }
 
