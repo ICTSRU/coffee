@@ -1,5 +1,10 @@
 # Changelog — Coffee with IT
 
+## v3.9 — 2026-10-22
+- **Smaller ITOC logo in the footer** — the ITOC badge now has exactly the same height as the «For Support» box and sits on the same line
+  (logo 32 px, was 40–46 px) on every page: booking, rating, «جلساتي», admin dashboard and the GitHub sign-in page.
+  On phones the badge keeps its compact size under the support box. E-mails unchanged.
+
 ## v3.8 — 2026-10-22
 - **E-mail to the presenter after each session** — once a session ends, its presenter receives (from itoc@sr.edu.sa) «سجّل تفاصيل جلستك»:
   employee and department, topic, date and time, attendance mode and office location, booking number, the employee's notes,

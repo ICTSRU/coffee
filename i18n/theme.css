@@ -26,3 +26,8 @@
 /* logo placement stays as on the university letterhead in both languages: SRU right, ICTD left; ITOC bottom-left */
 html[dir="ltr"] .brand .in{flex-direction:row-reverse}
 html[dir="ltr"] footer .in,html[dir="ltr"] footer .wrap{flex-direction:row-reverse}
+/* v3.9 — ITOC badge matches the «For Support» box: same height (row stretches both), logo scaled to fit */
+footer .in,footer .wrap{align-items:stretch}
+footer .support{align-self:stretch}
+footer .itoc{display:flex;align-items:center;padding:3px 9px}
+footer .itoc img{height:32px!important;width:auto}

@@ -1,4 +1,4 @@
-# Coffee with IT · v3.8
+# Coffee with IT · v3.9
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -41,7 +41,10 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v3.8
+## Updating the live app to v3.9
+
+**From v3.8 → v3.9:** replace **Index.html**, **Admin.html**, **Rate.html**, **My.html** (and **Code.gs** for the version number), deploy a new version,
+and upload `index.html` to the `coffee` repository. Visual change only.
 
 **From v3.7 → v3.8:** replace **Code.gs**, **Index.html**, **Admin.html**, **Rate.html**, **My.html**, deploy a new version, and upload `index.html`
 to the `coffee` repository. The Bookings column `PresenterMailAt` is added automatically. The presenter e-mail needs the hourly automation

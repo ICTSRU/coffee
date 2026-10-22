@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v3.8
+ * Coffee with IT — Booking System  ·  v3.9
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '3.8';
+const APP_VERSION = '3.9';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings',
   PRESENTERS: 'Presenters', ADMINS: 'Admins' };

@@ -376,6 +376,11 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 /* logo placement stays as on the university letterhead in both languages: SRU right, ICTD left; ITOC bottom-left */
 html[dir="ltr"] .brand .in{flex-direction:row-reverse}
 html[dir="ltr"] footer .in,html[dir="ltr"] footer .wrap{flex-direction:row-reverse}
+/* v3.9 — ITOC badge matches the «For Support» box: same height (row stretches both), logo scaled to fit */
+footer .in,footer .wrap{align-items:stretch}
+footer .support{align-self:stretch}
+footer .itoc{display:flex;align-items:center;padding:3px 9px}
+footer .itoc img{height:32px!important;width:auto}
 /* <<< cwi-theme */
 </style>
 <link rel="stylesheet" href="https://ictsru.github.io/brand/css/sru-tech-bg.css">
@@ -400,7 +405,7 @@ html[dir="ltr"] footer .in,html[dir="ltr"] footer .wrap{flex-direction:row-rever
 
 <div class="userbar">
   <span>مسجّل الدخول: <span class="chip en" id="who">…</span></span>
-  <span><a id="myLink" class="chip" href="#" target="_top" hidden>جلساتي</a> <a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v3.8</span></span>
+  <span><a id="myLink" class="chip" href="#" target="_top" hidden>جلساتي</a> <a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v3.9</span></span>
 </div>
 
 <main>
@@ -556,7 +561,7 @@ html[dir="ltr"] footer .in,html[dir="ltr"] footer .wrap{flex-direction:row-rever
     }
     return {
       getInitData: function () {
-        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '3.8', sessionMinutes: 10,
+        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '3.9', sessionMinutes: 10,
           topic: 'حماية بيانات الاجتماعات عند استخدام Read AI',
           onsiteLocation: 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]',
           days: days(), myBookings: mine.slice(), isAdmin: true, adminUrl: '#admin', myUrl: '#my',
