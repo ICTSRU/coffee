@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v3.5
+ * Coffee with IT — Booking System  ·  v3.6
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '3.5';
+const APP_VERSION = '3.6';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings',
   PRESENTERS: 'Presenters', ADMINS: 'Admins' };
@@ -17,10 +17,41 @@ const BOOKING_HEADERS = ['BookingId', 'Timestamp', 'Email', 'Name', 'Department'
   // v3.1 — filled by admins after the session
   'Presenter', 'AdminNotes', 'DurationMin',
   // v3.3 — office visit location, and «موضوع آخر» typed by the attendee
-  'Location', 'TopicOther'];
+  'Location', 'TopicOther',
+  // v3.6 — language the attendee booked in ('ar' | 'en'); every e-mail for this booking uses it
+  'Lang'];
 const COL = BOOKING_HEADERS.reduce((o, h, i) => (o[h] = i, o), {});
 
 const MODE_LABEL = { onsite: 'حضوري', office: 'حضوري — في مكتبك', zoom: 'عن بُعد (Zoom)' };
+const MODE_LABEL_EN = { onsite: 'In person (IT office)', office: 'In person — at your office', zoom: 'Remote (Zoom)' };
+const EN_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/* ── v3.6 · e-mail language ── every message is written in the language the attendee booked in. */
+let LANG_ = 'ar';
+function E_(ar, en) { return LANG_ === 'en' ? en : ar; }
+function withLang_(lang, fn) { const prev = LANG_; LANG_ = lang === 'en' ? 'en' : 'ar'; try { return fn(); } finally { LANG_ = prev; } }
+function langOf_(row) { return String(row[COL.Lang] || '').toLowerCase() === 'en' ? 'en' : 'ar'; }
+function modeLabelFor_(mode) { return LANG_ === 'en' ? MODE_LABEL_EN[mode] : MODE_LABEL[mode]; }
+/** "مبنى 1 — مكتب 2122" → "Building 1 — Office 2122" in English messages. */
+function locLabel_(loc) {
+  if (LANG_ !== 'en') return loc || '';
+  return String(loc || '').replace(/^مبنى\s*(.+?)\s*—\s*مكتب\s*(.+)$/, 'Building $1 — Office $2');
+}
+/** English topic name (Topics › TopicEn) when the message is in English and one is set. */
+function topicLabel_(t) {
+  if (LANG_ !== 'en' || !t) return t || '';
+  const hit = topicRows_().filter(x => topicKey_(x.name) === topicKey_(t))[0];
+  return (hit && hit.nameEn) || t;
+}
+function onsiteLabel_(s) { return (LANG_ === 'en' && String(s.OnsiteLocationEn || '').trim()) || String(s.OnsiteLocation || ''); }
+function dateLabel_(ds) { return LANG_ === 'en' ? enDate_(ds) : arDate_(ds); }
+function enDate_(ds) {
+  const a = String(ds).split('-').map(Number);
+  if (a.length < 3 || !a[0]) return String(ds);
+  const d = new Date(a[0], a[1] - 1, a[2], 12);
+  return EN_DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + EN_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+}
 /** Mode key from the label stored in the Bookings sheet. */
 function modeKey_(label) {
   if (label === MODE_LABEL.zoom) return 'zoom';
@@ -31,8 +62,8 @@ function modeKey_(label) {
 function whereOf_(row, s) {
   const m = modeKey_(row[COL.Mode]);
   if (m === 'zoom') return zoomLink_(s);
-  if (m === 'office') return row[COL.Location] || '';
-  return String(s.OnsiteLocation || '');
+  if (m === 'office') return locLabel_(row[COL.Location] || '');
+  return onsiteLabel_(s);
 }
 // Zoom meeting used for remote sessions when Settings › ZoomLink is empty or not a valid link.
 const DEFAULT_ZOOM_LINK = 'https://us06web.zoom.us/j/81335191824?pwd=Va9wQ6Yyz0NPaOjubMJBaxhqcUd7AR.1';
@@ -114,6 +145,8 @@ function getInitData() {
     topic: String(s.Topic || ''),
     sessionMinutes: Number(s.SessionMinutes) || 10,
     onsiteLocation: String(s.OnsiteLocation || ''),
+    onsiteLocationEn: String(s.OnsiteLocationEn || ''),
+    topicsEn: topicRows_().filter(t => t.active && t.nameEn).reduce((o, t) => (o[t.name] = t.nameEn, o), {}),
     days: availability_(),
     myBookings: myBookings_(email),
     topics: topicRows_().filter(t => t.active).map(t => t.name),
@@ -153,6 +186,7 @@ function book(payload) {
   if (!name || !dept || !mode || !/^\d{4}-\d{2}-\d{2}$/.test(p.date || '') || !/^\d{2}:\d{2}$/.test(p.time || '')) {
     throw new Error('بيانات الحجز غير مكتملة.');
   }
+  const lang = p.lang === 'en' ? 'en' : 'ar';
   const building = clean_(p.building, 30), office = clean_(p.office, 30);
   if (mode === 'office' && (!building || !office)) throw new Error('أدخل رقم المبنى ورقم المكتب للجلسة الحضورية في مكتبك.');
   const location = mode === 'office' ? 'مبنى ' + building + ' — مكتب ' + office : '';
@@ -185,13 +219,13 @@ function book(payload) {
     if (String(s.CreateCalendarEvents).toUpperCase() === 'TRUE') {
       try {
         const cal = calendar_(s);
-        const evOpts = {
-          location: where,
-          description: 'جلسة Coffee with IT (' + sessionMin + ' دقائق)\n' +
-            'الموضوع: ' + (topic || s.Topic || '') + '\n' +
-            'طريقة الحضور: ' + MODE_LABEL[mode] + '\n' +
-            'رقم الحجز: ' + id + (mode === 'zoom' ? '\nرابط Zoom: ' + where : '') + (notes ? '\nملاحظات: ' + notes : '')
-        };
+        const evOpts = withLang_(lang, () => ({
+          location: mode === 'zoom' ? where : (mode === 'office' ? locLabel_(location) : onsiteLabel_(s)),
+          description: E_('جلسة Coffee with IT (' + sessionMin + ' دقائق)', 'Coffee with IT session (' + sessionMin + ' minutes)') + '\n' +
+            E_('الموضوع: ', 'Topic: ') + topicLabel_(topic || s.Topic || '') + '\n' +
+            E_('طريقة الحضور: ', 'Attendance: ') + modeLabelFor_(mode) + '\n' +
+            E_('رقم الحجز: ', 'Booking no.: ') + id + (mode === 'zoom' ? E_('\nرابط Zoom: ', '\nZoom link: ') + where : '') + (notes ? E_('\nملاحظات: ', '\nNotes: ') + notes : '')
+        }));
         eventId = createInviteWithoutMeet_(cal, 'Coffee with IT — ' + name, start, end, evOpts, email);
       } catch (err) {
         console.warn('Calendar event not created: ' + err);
@@ -199,19 +233,20 @@ function book(payload) {
     }
 
     const row = [id, Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss'), email, name, dept, ext,
-      p.date, p.time, MODE_LABEL[mode], notes, 'Confirmed', eventId, '', '', '', topic, '', '', '', '', location, topicOther ? 'TRUE' : ''];
+      p.date, p.time, MODE_LABEL[mode], notes, 'Confirmed', eventId, '', '', '', topic, '', '', '', '', location, topicOther ? 'TRUE' : '', lang];
     ensureBookingHeaders_();
     const sh = sheet_(SHEETS.BOOKINGS);
     sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
     SpreadsheetApp.flush();
 
     result = { id: id, date: p.date, time: p.time, endTime: Utilities.formatDate(end, tz, 'HH:mm'),
-      mode: mode, modeLabel: MODE_LABEL[mode], where: where, name: name, topic: topic || String(s.Topic || '') };
+      mode: mode, modeLabel: MODE_LABEL[mode], where: where, name: name, topic: topic || String(s.Topic || ''), lang: lang,
+      location: location };
   } finally {
     lock.releaseLock();
   }
 
-  try { sendConfirmation_(email, result, s); } catch (err) { console.warn('Mail failed: ' + err); }
+  try { withLang_(lang, () => sendConfirmation_(email, result, s)); } catch (err) { console.warn('Mail failed: ' + err); }
   return result;
 }
 
@@ -232,7 +267,7 @@ function cancelBooking(id) {
         try { const ev = calendar_(s).getEventById(r[COL.CalendarEventId]); if (ev) ev.deleteEvent(); }
         catch (err) { console.warn(err); }
       }
-      try { sendCancellation_(email, r, s); } catch (err) { console.warn(err); }
+      try { withLang_(langOf_(r), () => sendCancellation_(email, r, s)); } catch (err) { console.warn(err); }
       return { ok: true, days: availability_(), myBookings: myBookings_(email) };
     }
   }
@@ -251,7 +286,7 @@ function getAdminData() {
     id: r[COL.BookingId], timestamp: r[COL.Timestamp], email: r[COL.Email], name: r[COL.Name],
     department: r[COL.Department], extension: r[COL.Extension], date: r[COL.Date], time: r[COL.Time],
     mode: modeKey_(r[COL.Mode]), modeLabel: r[COL.Mode], notes: r[COL.Notes],
-    location: r[COL.Location] || '', topicOther: String(r[COL.TopicOther]).toUpperCase() === 'TRUE',
+    location: r[COL.Location] || '', topicOther: String(r[COL.TopicOther]).toUpperCase() === 'TRUE', lang: langOf_(r),
     status: r[COL.Status], cancelledAt: r[COL.CancelledAt], attendance: r[COL.Attendance] || '',
     topic: r[COL.Topic] || '', thanksSentAt: r[COL.ThanksSentAt] || '',
     presenter: r[COL.Presenter] || '', adminNotes: r[COL.AdminNotes] || '', durationMin: Number(r[COL.DurationMin]) || 0,
@@ -476,7 +511,7 @@ function adminCancel(id) {
       if (r[COL.CalendarEventId]) {
         try { const ev = calendar_(s).getEventById(r[COL.CalendarEventId]); if (ev) ev.deleteEvent(); } catch (err) { console.warn(err); }
       }
-      try { sendCancellation_(r[COL.Email], r, s); } catch (err) { console.warn(err); }
+      try { withLang_(langOf_(r), () => sendCancellation_(r[COL.Email], r, s)); } catch (err) { console.warn(err); }
       return getAdminData();
     }
   }
@@ -484,16 +519,17 @@ function adminCancel(id) {
 }
 
 /** Adds a session topic (admin). Returns the full topic list. */
-function addTopic(name) {
+function addTopic(name, nameEn) {
   const email = requireAdmin_();
   const t = norm_(clean_(name, 150));
+  const en = norm_(clean_(nameEn, 150));
   if (!t) throw new Error('اكتب اسم الموضوع.');
   const lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
     if (topicRows_().some(x => topicKey_(x.name) === topicKey_(t))) throw new Error('هذا الموضوع موجود بالفعل.');
     const sh = topicsSheet_();
-    sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setNumberFormat('@').setValues([[t, 'TRUE',
-      Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'), email]]);
+    sh.getRange(sh.getLastRow() + 1, 1, 1, 5).setNumberFormat('@').setValues([[t, 'TRUE',
+      Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'), email, en]]);
   } finally { lock.releaseLock(); }
   return topicRows_();
 }
@@ -509,20 +545,34 @@ function setTopicActive(name, active) {
   throw new Error('الموضوع غير موجود.');
 }
 
+/** Sets the English name of a topic (admin) — shown on the English booking page and in English e-mails. */
+function setTopicEn(name, nameEn) {
+  requireAdmin_();
+  const sh = topicsSheet_();
+  const vals = sh.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (topicKey_(vals[i][0]) === topicKey_(name)) { sh.getRange(i + 1, 5).setNumberFormat('@').setValue(norm_(clean_(nameEn, 150))); return topicRows_(); }
+  }
+  throw new Error('الموضوع غير موجود.');
+}
+
 function topicsSheet_() {
   const ss = SpreadsheetApp.getActive();
   let sh = ss.getSheetByName(SHEETS.TOPICS);
   if (!sh) {
     const def = String(getSettingsSafe_().Topic || 'حماية بيانات الاجتماعات عند استخدام Read AI');
-    sh = ensureSheet_(SHEETS.TOPICS, ['Topic', 'Active', 'CreatedAt', 'CreatedBy'],
-      [[def, 'TRUE', Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'), 'setup']]);
+    sh = ensureSheet_(SHEETS.TOPICS, ['Topic', 'Active', 'CreatedAt', 'CreatedBy', 'TopicEn'],
+      [[def, 'TRUE', Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'), 'setup', '']]);
   }
+  if (sh.getMaxColumns() < 5) sh.insertColumnsAfter(sh.getMaxColumns(), 5 - sh.getMaxColumns());
+  if (sh.getRange(1, 5).getDisplayValue() !== 'TopicEn')
+    sh.getRange(1, 5).setValue('TopicEn').setFontWeight('bold').setBackground('#501e8c').setFontColor('#ffffff');
   return sh;
 }
 
 function topicRows_() {
   return topicsSheet_().getDataRange().getDisplayValues().slice(1).filter(r => norm_(r[0]))
-    .map(r => ({ name: norm_(r[0]), active: String(r[1]).toUpperCase() !== 'FALSE', createdAt: r[2] || '', createdBy: r[3] || '' }));
+    .map(r => ({ name: norm_(r[0]), active: String(r[1]).toUpperCase() !== 'FALSE', createdAt: r[2] || '', createdBy: r[3] || '', nameEn: norm_(r[4] || '') }));
 }
 
 function isAdmin_(email) {
@@ -569,7 +619,8 @@ function getRateData(id) {
   return {
     version: APP_VERSION,
     booking: { id: id, name: r.row[COL.Name], date: r.row[COL.Date], dateLabel: arDate_(r.row[COL.Date]), time: r.row[COL.Time],
-      endTime: addMinutes_(r.row[COL.Time], mins), topic: r.row[COL.Topic] || String(s.Topic || ''), modeLabel: r.row[COL.Mode] },
+      endTime: addMinutes_(r.row[COL.Time], mins), topic: r.row[COL.Topic] || String(s.Topic || ''), modeLabel: r.row[COL.Mode],
+      topicEn: withLang_('en', () => topicLabel_(r.row[COL.Topic] || String(s.Topic || ''))), mode: modeKey_(r.row[COL.Mode]), lang: langOf_(r.row) },
     ended: end <= new Date(),
     previous: prev ? { rating: Number(prev.Rating) || 0, comment: prev.Comment || '' } : null,
     q: { ar: RATE_Q_AR, en: RATE_Q_EN, open_ar: RATE_OPEN_AR, open_en: RATE_OPEN_EN, labels: RATE_LABELS }
@@ -625,13 +676,16 @@ function sendPendingThanks() {
 }
 
 /** Admin: send a sample thank-you e-mail to yourself. */
-function sendThanksTest() {
+function sendThanksTest(lang) {
   const email = requireAdmin_();
+  return withLang_(lang, () => sendThanksTestIn_(email));
+}
+function sendThanksTestIn_(email) {
   const s = getSettings_();
   const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   const b = { id: 'CWI-TEST', name: 'تجربة', date: today, time: '10:00', endTime: addMinutes_('10:00', Number(s.SessionMinutes) || 10),
-    topic: String(s.Topic || ''), modeLabel: 'حضوري' };
-  const from = mail_({ to: email, subject: '[تجربة] شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s) }, s);
+    topic: String(s.Topic || ''), modeLabel: 'حضوري', mode: 'onsite' };
+  const from = mail_({ to: email, subject: E_('[تجربة] شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', '[Test] Thank you for attending Coffee with IT — rate your session'), htmlBody: thanksHtml_(b, s) }, s);
   return { ok: true, to: email, from: from };
 }
 
@@ -673,8 +727,10 @@ function processThanks_(auto) {
 function thanksAndMark_(r, s) {
   const b = { id: r.row[COL.BookingId], name: r.row[COL.Name], date: r.row[COL.Date], time: r.row[COL.Time],
     endTime: addMinutes_(r.row[COL.Time], Number(s.SessionMinutes) || 10), topic: r.row[COL.Topic] || String(s.Topic || ''),
-    modeLabel: r.row[COL.Mode] };
-  mail_({ to: r.row[COL.Email], subject: 'شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', htmlBody: thanksHtml_(b, s) }, s);
+    modeLabel: r.row[COL.Mode], mode: modeKey_(r.row[COL.Mode]) };
+  withLang_(langOf_(r.row), () => mail_({ to: r.row[COL.Email],
+    subject: E_('شكرًا لحضورك جلسة Coffee with IT — قيّم الجلسة', 'Thank you for attending Coffee with IT — rate your session'),
+    htmlBody: thanksHtml_(b, s) }, s));
   sheet_(SHEETS.BOOKINGS).getRange(r.index + 1, COL.ThanksSentAt + 1).setNumberFormat('@')
     .setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'));
 }
@@ -718,7 +774,7 @@ function webAppUrl_(s) {
 }
 
 function rateLink_(s, id, n) {
-  return webAppUrl_(s) + '?page=rate&id=' + encodeURIComponent(id) + (n ? '&r=' + n : '');
+  return webAppUrl_(s) + '?page=rate&id=' + encodeURIComponent(id) + (n ? '&r=' + n : '') + '&lang=' + LANG_;
 }
 
 /* ─────────────────────────── Admin (menu) ─────────────────────────── */
@@ -750,6 +806,7 @@ function setup() {
     ['CapacityPerSlot', '1', 'عدد الحجوزات المسموح بها لكل موعد'],
     ['MaxActiveBookingsPerUser', '1', 'عدد الحجوزات القائمة المسموح بها لكل موظف'],
     ['OnsiteLocation', 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]', 'مكان الجلسة الحضورية'],
+    ['OnsiteLocationEn', 'Executive Directorate of Communications & IT — [Building / Room]', 'مكان الجلسة الحضورية بالإنجليزية (لصفحة الحجز والبريد باللغة الإنجليزية)'],
     ['ZoomLink', DEFAULT_ZOOM_LINK, 'يُرسل في البريد لمن يختار الحضور عن بُعد'],
     ['MailFrom', DEFAULT_MAIL_FROM, 'عنوان المُرسِل لكل الرسائل (تسجيل/إلغاء/تذكير/شكر وتقييم) — يجب أن يكون حساب النشر نفسه أو اسمًا مستعارًا مُفعّلًا «إرسال بريد باسم»'],
     ['NotifyEmail', 'servicedesk@sr.edu.sa;m.elmahdy@sr.edu.sa', 'نسخة مخفية (BCC) من كل رسالة تأكيد/إلغاء/تذكير — افصل بين العناوين بـ ;'],
@@ -807,7 +864,7 @@ function sendReminders() {
     const start = toDateTime_(r[COL.Date], r[COL.Time]);
     if (start > now && start <= horizon) {
       try {
-        sendReminderMail_(r, s);
+        withLang_(langOf_(r), () => sendReminderMail_(r, s));
         sh.getRange(i + 1, COL.ReminderSent + 1).setNumberFormat('@')
           .setValue(Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'));
       } catch (err) { console.warn(err); }
@@ -939,23 +996,33 @@ function copyList_(s, to) {
 }
 
 function sendConfirmation_(email, b, s) {
-  send_(email, 'تأكيد حجز جلسة Coffee with IT — ' + arDate_(b.date) + ' · ' + b.time, confirmationHtml_(b, s), s);
+  const m = Object.assign({}, b, {
+    where: b.mode === 'zoom' ? b.where : (b.mode === 'office' ? locLabel_(b.location || b.where) : onsiteLabel_(s)),
+    modeLabel: modeLabelFor_(b.mode), topic: topicLabel_(b.topic) });
+  send_(email, E_('تأكيد حجز جلسة Coffee with IT — ', 'Coffee with IT booking confirmed — ') + dateLabel_(b.date) + ' · ' + b.time,
+    confirmationHtml_(m, s), s);
 }
 
 function sendCancellation_(email, r, s) {
-  const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], modeLabel: r[COL.Mode], topic: r[COL.Topic] || '' };
-  send_(email, 'إلغاء حجز جلسة Coffee with IT — ' + arDate_(b.date) + ' · ' + b.time, cancellationHtml_(b, s), s);
+  const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], modeLabel: modeLabelFor_(modeKey_(r[COL.Mode])),
+    topic: topicLabel_(r[COL.Topic] || '') };
+  send_(email, E_('إلغاء حجز جلسة Coffee with IT — ', 'Coffee with IT booking cancelled — ') + dateLabel_(b.date) + ' · ' + b.time,
+    cancellationHtml_(b, s), s);
 }
 
 function sendReminderMail_(r, s) {
-  const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], topic: r[COL.Topic] || '',
-    mode: modeKey_(r[COL.Mode]), modeLabel: r[COL.Mode],
+  const mode = modeKey_(r[COL.Mode]);
+  const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], topic: topicLabel_(r[COL.Topic] || ''),
+    mode: mode, modeLabel: modeLabelFor_(mode),
     where: whereOf_(r, s),
     endTime: addMinutes_(r[COL.Time], Number(s.SessionMinutes) || 10) };
-  send_(r[COL.Email], 'تذكير: جلسة Coffee with IT اليوم الساعة ' + b.time, reminderHtml_(b, s), s);
+  send_(r[COL.Email], E_('تذكير: جلسة Coffee with IT اليوم الساعة ', 'Reminder: your Coffee with IT session today at ') + b.time, reminderHtml_(b, s), s);
 }
 
-/* ---------- templates (pure: no Apps Script services, easy to preview) ---------- */
+/* ---------- templates (pure: no Apps Script services, easy to preview) — Arabic or English through E_() ---------- */
+
+function brandName_() { return LANG_ === 'en' ? 'Coffee with IT' : ltrSpan_('Coffee with IT'); }
+function topicHtml_(t) { return LANG_ === 'en' ? esc_(t) : keepLatin_(esc_(t)); }
 
 function confirmationHtml_(b, s) {
   const mins = Number(s.SessionMinutes) || 10;
@@ -963,33 +1030,40 @@ function confirmationHtml_(b, s) {
   const calendarInvite = String(s.CreateCalendarEvents).toUpperCase() === 'TRUE';
   const zoom = b.mode === 'zoom';
   const body =
-    p_('مرحبًا <b>' + esc_(b.name) + '</b>،') +
-    p_('يسعدنا إبلاغك بأنه <b>تم تأكيد حجزك</b> في جلسة <b>' + ltrSpan_('Coffee with IT') + '</b>' +
-      (topic ? ' بعنوان «<b>' + keepLatin_(esc_(topic)) + '</b>»' : '') + '، ونتطلع إلى لقائك.') +
-    sectionTitle_('تفاصيل الحجز') +
+    p_(E_('مرحبًا <b>' + esc_(b.name) + '</b>،', 'Hello <b>' + esc_(b.name) + '</b>,')) +
+    p_(E_('يسعدنا إبلاغك بأنه <b>تم تأكيد حجزك</b> في جلسة <b>' + brandName_() + '</b>' +
+      (topic ? ' بعنوان «<b>' + topicHtml_(topic) + '</b>»' : '') + '، ونتطلع إلى لقائك.',
+      'Your <b>Coffee with IT</b> session' + (topic ? ' on “<b>' + topicHtml_(topic) + '</b>”' : '') + ' is <b>confirmed</b>. We look forward to seeing you.')) +
+    sectionTitle_(E_('تفاصيل الحجز', 'Booking details')) +
     detailsCard_([
-      ['الموضوع', keepLatin_(esc_(topic))],
-      ['التاريخ', esc_(arDate_(b.date))],
-      ['الوقت', timeRange_(b)],
-      ['مدة الجلسة', mins + ' دقائق'],
-      ['طريقة الحضور', modePill_(b.mode, b.modeLabel)],
-      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px">' + esc_(b.id) + '</span>']
+      [E_('الموضوع', 'Topic'), topicHtml_(topic)],
+      [E_('التاريخ', 'Date'), esc_(dateLabel_(b.date))],
+      [E_('الوقت', 'Time'), timeRange_(b)],
+      [E_('مدة الجلسة', 'Duration'), mins + E_(' دقائق', ' minutes')],
+      [E_('طريقة الحضور', 'Attendance'), modePill_(b.mode, b.modeLabel)],
+      [E_('رقم الحجز', 'Booking no.'), '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px">' + esc_(b.id) + '</span>']
     ]) +
     whereBlock_(b) +
     (calendarInvite
-      ? note_('أرسلنا إليك أيضًا دعوة في تقويم Google بموعد الجلسة، يُرجى قبولها ليظهر الموعد في تقويمك.')
-      : '<div style="margin:18px 0 4px">' + button_('أضف الموعد إلى التقويم', calendarLink_(b, s), C.blue) + '</div>') +
-    sectionTitle_('قبل الجلسة') +
+      ? note_(E_('أرسلنا إليك أيضًا دعوة في تقويم Google بموعد الجلسة، يُرجى قبولها ليظهر الموعد في تقويمك.',
+        'We have also sent you a Google Calendar invitation — please accept it so the session appears in your calendar.'))
+      : '<div style="margin:18px 0 4px">' + button_(E_('أضف الموعد إلى التقويم', 'Add to calendar'), calendarLink_(b, s), C.blue) + '</div>') +
+    sectionTitle_(E_('قبل الجلسة', 'Before the session')) +
     checklist_(zoom
-      ? ['تأكد من تثبيت تطبيق Zoom وتجربة الصوت والصورة مسبقًا.', 'ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.']
+      ? [E_('تأكد من تثبيت تطبيق Zoom وتجربة الصوت والصورة مسبقًا.', 'Make sure Zoom is installed and test your audio and video beforehand.'),
+         E_('ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.', 'Join from the link above two minutes before the start.'),
+         E_('جهّز أسئلتك أو الحالات التي تودّ مناقشتها.', 'Prepare your questions or the cases you would like to discuss.')]
       : (b.mode === 'office'
-        ? ['سيزورك أحد أعضاء فريق تقنية المعلومات في مكتبك في الموعد المحدد.', 'جهّز جهازك وأسئلتك أو الحالات التي تودّ مناقشتها.']
-        : ['نرجو الحضور قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.'])) +
+        ? [E_('سيزورك أحد أعضاء فريق تقنية المعلومات في مكتبك في الموعد المحدد.', 'A member of the IT team will visit you at your office at the scheduled time.'),
+           E_('جهّز جهازك وأسئلتك أو الحالات التي تودّ مناقشتها.', 'Have your device ready, along with your questions or cases to discuss.')]
+        : [E_('نرجو الحضور قبل الموعد بدقيقتين.', 'Please arrive two minutes before the start.'),
+           E_('جهّز أسئلتك أو الحالات التي تودّ مناقشتها.', 'Prepare your questions or the cases you would like to discuss.')])) +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;border-top:1px solid ' + C.line + '"><tr>' +
-      '<td style="padding-top:18px;font-size:14px;color:' + C.muted + '">تغيّرت ظروفك؟ يمكنك إدارة الحجز أو إلغاؤه ليُتاح الموعد لزملائك.</td></tr>' +
-      '<tr><td style="padding-top:10px">' + button_('إدارة الحجز', SITE_URL, C.purple) + '</td></tr></table>';
-  return layout_({ preheader: 'حجزك مؤكد: ' + arDate_(b.date) + ' الساعة ' + b.time + ' — ' + b.modeLabel,
-    title: 'تم تأكيد حجزك', subtitle: arDate_(b.date) + ' · الساعة ' + b.time, accent: C.purple, body: body });
+      '<td style="padding-top:18px;font-size:14px;color:' + C.muted + '">' +
+        E_('تغيّرت ظروفك؟ يمكنك إدارة الحجز أو إلغاؤه ليُتاح الموعد لزملائك.', 'Plans changed? You can manage or cancel your booking so a colleague can take the slot.') + '</td></tr>' +
+      '<tr><td style="padding-top:10px">' + button_(E_('إدارة الحجز', 'Manage booking'), SITE_URL + (LANG_ === 'en' ? '?lang=en' : ''), C.purple) + '</td></tr></table>';
+  return layout_({ preheader: E_('حجزك مؤكد: ' + dateLabel_(b.date) + ' الساعة ', 'Booking confirmed: ' + dateLabel_(b.date) + ' at ') + b.time + ' — ' + b.modeLabel,
+    title: E_('تم تأكيد حجزك', 'Your booking is confirmed'), subtitle: dateLabel_(b.date) + E_(' · الساعة ', ' · ') + b.time, accent: C.purple, body: body });
 }
 
 function sectionTitle_(t) {
@@ -1008,37 +1082,40 @@ function checklist_(items) {
 
 function cancellationHtml_(b, s) {
   const body =
-    p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
-    p_('تم إلغاء حجزك لجلسة <b>' + ltrSpan_('Coffee with IT') + '</b> بناءً على طلبك، وأصبح الموعد متاحًا لزملائك.') +
+    p_(E_('مرحبًا <b>' + esc_(b.name || '') + '</b>،', 'Hello <b>' + esc_(b.name || '') + '</b>,')) +
+    p_(E_('تم إلغاء حجزك لجلسة <b>' + brandName_() + '</b> بناءً على طلبك، وأصبح الموعد متاحًا لزملائك.',
+      'Your <b>Coffee with IT</b> booking has been cancelled and the slot is now open to your colleagues.')) +
     detailsCard_([
-      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
-      ['التاريخ', esc_(arDate_(b.date))],
-      ['الوقت', '<span dir="ltr">' + esc_(b.time) + '</span>'],
-      ['الحالة', '<span style="background:' + C.redLight + ';color:' + C.red + ';padding:2px 10px;border-radius:4px;font-weight:bold">ملغى</span>']
+      [E_('رقم الحجز', 'Booking no.'), '<span style="font-family:Consolas,Menlo,monospace;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
+      [E_('التاريخ', 'Date'), esc_(dateLabel_(b.date))],
+      [E_('الوقت', 'Time'), '<span dir="ltr">' + esc_(b.time) + '</span>'],
+      [E_('الحالة', 'Status'), '<span style="background:' + C.redLight + ';color:' + C.red + ';padding:2px 10px;border-radius:4px;font-weight:bold">' + E_('ملغى', 'Cancelled') + '</span>']
     ]) +
-    p_('يسعدنا حجزك لموعد آخر في أي وقت.') +
-    '<div style="margin:6px 0 4px">' + button_('احجز موعدًا آخر', SITE_URL, C.purple) + '</div>';
-  return layout_({ preheader: 'تم إلغاء حجزك ' + b.id, title: 'تم إلغاء الحجز',
-    subtitle: arDate_(b.date) + ' · ' + b.time, accent: C.dark, body: body });
+    p_(E_('يسعدنا حجزك لموعد آخر في أي وقت.', 'You are welcome to book another time whenever it suits you.')) +
+    '<div style="margin:6px 0 4px">' + button_(E_('احجز موعدًا آخر', 'Book another time'), SITE_URL + (LANG_ === 'en' ? '?lang=en' : ''), C.purple) + '</div>';
+  return layout_({ preheader: E_('تم إلغاء حجزك ', 'Booking cancelled ') + b.id, title: E_('تم إلغاء الحجز', 'Booking cancelled'),
+    subtitle: dateLabel_(b.date) + ' · ' + b.time, accent: C.dark, body: body });
 }
 
 function reminderHtml_(b, s) {
   const body =
-    p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
-    p_('نذكّرك بجلسة <b>' + ltrSpan_('Coffee with IT') + '</b>' + (b.topic ? ' حول <b>' + keepLatin_(esc_(b.topic)) + '</b>' : '') + ' اليوم الساعة <b dir="ltr">' + esc_(b.time) + '</b>.') +
+    p_(E_('مرحبًا <b>' + esc_(b.name || '') + '</b>،', 'Hello <b>' + esc_(b.name || '') + '</b>,')) +
+    p_(E_('نذكّرك بجلسة <b>' + brandName_() + '</b>' + (b.topic ? ' حول <b>' + topicHtml_(b.topic) + '</b>' : '') + ' اليوم الساعة <b dir="ltr">' + esc_(b.time) + '</b>.',
+      'A reminder of your <b>Coffee with IT</b> session' + (b.topic ? ' on <b>' + topicHtml_(b.topic) + '</b>' : '') + ' today at <b>' + esc_(b.time) + '</b>.')) +
     detailsCard_([
-      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
-      ['الوقت', timeRange_(b)],
-      ['طريقة الحضور', modePill_(b.mode, b.modeLabel)]
+      [E_('رقم الحجز', 'Booking no.'), '<span style="font-family:Consolas,Menlo,monospace;direction:ltr;unicode-bidi:isolate">' + esc_(b.id) + '</span>'],
+      [E_('الوقت', 'Time'), timeRange_(b)],
+      [E_('طريقة الحضور', 'Attendance'), modePill_(b.mode, b.modeLabel)]
     ]) +
     whereBlock_(b);
-  return layout_({ preheader: 'جلستك اليوم الساعة ' + b.time, title: 'تذكير بموعد جلستك',
-    subtitle: 'اليوم · ' + b.time, accent: C.blue, body: body });
+  return layout_({ preheader: E_('جلستك اليوم الساعة ', 'Your session today at ') + b.time, title: E_('تذكير بموعد جلستك', 'Session reminder'),
+    subtitle: E_('اليوم · ', 'Today · ') + b.time, accent: C.blue, body: body });
 }
 
 function thanksHtml_(b, s) {
   // Outlook for Windows (Word engine) ignores display:block, borders and radius on <a>/<span>, so each choice is a
-  // fixed-size table cell carrying the border and background; only the text inside is linked. Order 1 → 5 from the right.
+  // fixed-size table cell carrying the border and background; only the text inside is linked. Arabic: 1 → 5 from the right.
+  const en = LANG_ === 'en';
   const nb = t => esc_(t);  // labels may wrap on phones; the fixed cell height keeps all five boxes equal
   const cells = RATE_LABELS.map((l, i) => {
     const n = i + 1, link = esc_(rateLink_(s, b.id, n)), bg = n >= 4 ? C.light : '#ffffff';
@@ -1047,32 +1124,39 @@ function thanksHtml_(b, s) {
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + bg + '" style="border:2px solid ' + C.purple + ';border-radius:8px;background:' + bg + '">' +
       '<tr><td align="center" valign="middle" height="92" style="height:92px;padding:6px 2px;text-align:center;line-height:14px">' +
         a(String(n), 'color:' + C.dark + ';font-size:24px;line-height:28px;font-weight:bold') + '<br>' +
-        a(nb(l[0]), 'color:' + C.muted + ';font-size:11px;line-height:16px') + '<br>' +
-        a(nb(l[1]), 'color:' + C.muted + ';font-size:10px;line-height:14px') +
+        (en ? a(nb(l[1]), 'color:' + C.muted + ';font-size:11px;line-height:16px')
+            : a(nb(l[0]), 'color:' + C.muted + ';font-size:11px;line-height:16px') + '<br>' + a(nb(l[1]), 'color:' + C.muted + ';font-size:10px;line-height:14px')) +
       '</td></tr></table></td>';
   }).join('');
-  const body =
-    p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
-    p_('شكرًا لحضورك جلسة <b>' + ltrSpan_('Coffee with IT') + '</b>' + (b.topic ? ' حول <b>' + keepLatin_(esc_(b.topic)) + '</b>' : '') + '. يهمنا رأيك لتطوير جلساتنا القادمة، ولن يستغرق التقييم أكثر من دقيقة.') +
-    '<div dir="ltr" style="text-align:left;color:' + C.muted + ';font-size:13px;margin:0 0 16px">Thank you for attending. Your feedback helps us improve — it takes less than a minute.</div>' +
-    '<div style="border-top:1px solid ' + C.line + ';padding-top:16px;text-align:center">' +
-      '<div style="font-weight:bold;font-size:17px;color:' + C.dark + '">' + RATE_Q_AR + '</div>' +
-      '<div dir="ltr" style="font-size:13px;color:' + C.muted + ';margin-bottom:12px">' + RATE_Q_EN + '</div>' +
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="direction:rtl;table-layout:fixed"><tr>' + cells + '</tr></table>' +
-      '<div style="font-size:13px;color:' + C.muted + ';margin-top:12px">اضغط على رقم للتقييم، ثم يمكنك كتابة مقترحاتك · Tap a number, then add your suggestions</div>' +
-    '</div>' +
-    detailsCard_([
-      ['الجلسة', esc_(arDate_(b.date)) + ' · ' + timeRange_(b)],
-      ['طريقة الحضور', esc_(b.modeLabel || '')]
-    ]);
-  return layout_({ preheader: 'شكرًا لحضورك — ' + RATE_Q_AR, title: 'شكرًا لحضورك',
-    subtitle: 'قيّم جلسة Coffee with IT · Rate your session', accent: C.purple, body: body });
+  const topic = topicLabel_(b.topic);
+  const body = en
+    ? p_('Hello <b>' + esc_(b.name || '') + '</b>,') +
+      p_('Thank you for attending <b>Coffee with IT</b>' + (topic ? ' on <b>' + esc_(topic) + '</b>' : '') + '. Your feedback helps us improve future sessions — it takes less than a minute.') +
+      '<div style="border-top:1px solid ' + C.line + ';padding-top:16px;text-align:center">' +
+        '<div style="font-weight:bold;font-size:17px;color:' + C.dark + ';margin-bottom:12px">' + RATE_Q_EN + '</div>' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="ltr" style="direction:ltr;table-layout:fixed"><tr>' + cells + '</tr></table>' +
+        '<div style="font-size:13px;color:' + C.muted + ';margin-top:12px">Tap a number to rate, then add your suggestions</div>' +
+      '</div>' +
+      detailsCard_([['Session', esc_(dateLabel_(b.date)) + ' · ' + timeRange_(b)], ['Attendance', esc_(modeLabelFor_(b.mode || modeKey_(b.modeLabel)))]])
+    : p_('مرحبًا <b>' + esc_(b.name || '') + '</b>،') +
+      p_('شكرًا لحضورك جلسة <b>' + ltrSpan_('Coffee with IT') + '</b>' + (b.topic ? ' حول <b>' + keepLatin_(esc_(b.topic)) + '</b>' : '') + '. يهمنا رأيك لتطوير جلساتنا القادمة، ولن يستغرق التقييم أكثر من دقيقة.') +
+      '<div dir="ltr" style="text-align:left;color:' + C.muted + ';font-size:13px;margin:0 0 16px">Thank you for attending. Your feedback helps us improve — it takes less than a minute.</div>' +
+      '<div style="border-top:1px solid ' + C.line + ';padding-top:16px;text-align:center">' +
+        '<div style="font-weight:bold;font-size:17px;color:' + C.dark + '">' + RATE_Q_AR + '</div>' +
+        '<div dir="ltr" style="font-size:13px;color:' + C.muted + ';margin-bottom:12px">' + RATE_Q_EN + '</div>' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="direction:rtl;table-layout:fixed"><tr>' + cells + '</tr></table>' +
+        '<div style="font-size:13px;color:' + C.muted + ';margin-top:12px">اضغط على رقم للتقييم، ثم يمكنك كتابة مقترحاتك · Tap a number, then add your suggestions</div>' +
+      '</div>' +
+      detailsCard_([['الجلسة', esc_(arDate_(b.date)) + ' · ' + timeRange_(b)], ['طريقة الحضور', esc_(b.modeLabel || '')]]);
+  return layout_({ preheader: E_('شكرًا لحضورك — ' + RATE_Q_AR, 'Thank you for attending — ' + RATE_Q_EN), title: E_('شكرًا لحضورك', 'Thank you for attending'),
+    subtitle: E_('قيّم جلسة Coffee with IT · Rate your session', 'Rate your Coffee with IT session'), accent: C.purple, body: body });
 }
 
 /* ---------- building blocks ---------- */
 
 function layout_(o) {
-  return '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">' +
+  const dir = LANG_ === 'en' ? 'ltr' : 'rtl', start = LANG_ === 'en' ? 'left' : 'right', end = LANG_ === 'en' ? 'right' : 'left';
+  return '<!doctype html><html lang="' + LANG_ + '" dir="' + dir + '"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1"><title>' + esc_(o.title) + '</title>' +
     '<link href="' + FONT_CSS_URL + '" rel="stylesheet" type="text/css">' +
     '<style type="text/css">@import url(\'' + FONT_CSS_URL + '\');' +
@@ -1081,34 +1165,34 @@ function layout_(o) {
     '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' + esc_(o.preheader) + '</div>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + C.bg + '"><tr>' +
     '<td align="center" style="padding:24px 12px">' +
-    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="width:100%;max-width:600px;background:#ffffff;border:1px solid ' + C.line + ';border-radius:6px;border-collapse:separate;overflow:hidden">' +
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" dir="' + dir + '" style="width:100%;max-width:600px;background:#ffffff;border:1px solid ' + C.line + ';border-radius:6px;border-collapse:separate;overflow:hidden">' +
       // logos (embedded in the message: shown by Outlook without "download pictures")
       '<tr><td bgcolor="#ffffff" style="padding:16px 24px;border-bottom:1px solid ' + C.line + ';background:#ffffff">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt"><tr>' +
-          '<td align="right" valign="middle"><img src="cid:sru" alt="جامعة سليمان الراجحي" width="206" height="34" style="display:block;width:206px;height:34px;border:0"></td>' +
-          '<td align="left" valign="middle"><img src="cid:ictd" alt="الإدارة التنفيذية للاتصالات وتقنية المعلومات" width="125" height="44" style="display:block;width:125px;height:44px;border:0"></td>' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt"><tr>' +
+          '<td align="right" valign="middle"><img src="cid:sru" alt="' + E_('جامعة سليمان الراجحي', 'Sulaiman Al Rajhi University') + '" width="206" height="34" style="display:block;width:206px;height:34px;border:0"></td>' +
+          '<td align="left" valign="middle"><img src="cid:ictd" alt="' + E_('الإدارة التنفيذية للاتصالات وتقنية المعلومات', 'Executive Directorate of Communications & IT') + '" width="125" height="44" style="display:block;width:125px;height:44px;border:0"></td>' +
         '</tr></table></td></tr>' +
       // hero — every cell carries bgcolor so Outlook for Windows draws no white lines between tables
-      '<tr><td bgcolor="' + o.accent + '" align="right" style="background:' + o.accent + ';padding:24px 28px 22px;font-family:' + FONT + ';color:#ffffff;text-align:right">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" bgcolor="' + o.accent + '" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background:' + o.accent + '">' +
-          '<tr><td bgcolor="' + o.accent + '" align="right" valign="middle" style="background:' + o.accent + '">' +
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" dir="rtl" align="right" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt"><tr>' +
-              '<td bgcolor="' + o.accent + '" valign="middle" style="background:' + o.accent + ';padding-left:12px"><img src="cid:cwit" alt="Coffee with IT — قهوة مع تقنية المعلومات" width="52" height="52" style="display:block;width:52px;height:52px;border:0"></td>' +
+      '<tr><td bgcolor="' + o.accent + '" align="' + start + '" style="background:' + o.accent + ';padding:24px 28px 22px;font-family:' + FONT + ';color:#ffffff;text-align:' + start + '">' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="' + dir + '" bgcolor="' + o.accent + '" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background:' + o.accent + '">' +
+          '<tr><td bgcolor="' + o.accent + '" align="' + start + '" valign="middle" style="background:' + o.accent + '">' +
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" dir="' + dir + '" align="' + start + '" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt"><tr>' +
+              '<td bgcolor="' + o.accent + '" valign="middle" style="background:' + o.accent + ';padding-' + end + ':12px"><img src="cid:cwit" alt="Coffee with IT — قهوة مع تقنية المعلومات" width="52" height="52" style="display:block;width:52px;height:52px;border:0"></td>' +
               '<td bgcolor="' + o.accent + '" valign="middle" style="background:' + o.accent + '">' +
                 '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt"><tr>' +
                   '<td bgcolor="#6c3fa8" dir="ltr" style="background:#6c3fa8;padding:4px 12px;border-radius:4px;font-family:' + FONT + ';font-size:13px;line-height:18px;font-weight:bold;color:#ffffff;white-space:nowrap">Coffee with IT · 10 min</td>' +
                 '</tr></table></td>' +
             '</tr></table></td></tr>' +
-          '<tr><td bgcolor="' + o.accent + '" align="right" style="background:' + o.accent + ';padding-top:14px;font-family:' + FONT + ';font-size:26px;line-height:36px;font-weight:bold;color:#ffffff">' + esc_(o.title) + '</td></tr>' +
-          '<tr><td bgcolor="' + o.accent + '" align="right" style="background:' + o.accent + ';padding-top:2px;font-family:' + FONT + ';font-size:15px;color:#ffffff">' + esc_(o.subtitle) + '</td></tr>' +
+          '<tr><td bgcolor="' + o.accent + '" align="' + start + '" style="background:' + o.accent + ';padding-top:14px;font-family:' + FONT + ';font-size:26px;line-height:36px;font-weight:bold;color:#ffffff">' + esc_(o.title) + '</td></tr>' +
+          '<tr><td bgcolor="' + o.accent + '" align="' + start + '" style="background:' + o.accent + ';padding-top:2px;font-family:' + FONT + ';font-size:15px;color:#ffffff">' + esc_(o.subtitle) + '</td></tr>' +
         '</table>' +
       '</td></tr>' +
       '<tr><td bgcolor="' + C.blue + '" height="5" style="height:5px;line-height:5px;font-size:0;mso-line-height-rule:exactly;background:' + C.blue + '">&nbsp;</td></tr>' +
       // body
-      '<tr><td style="padding:26px 28px 28px;font-family:' + FONT + ';color:' + C.ink + ';font-size:15px;line-height:1.85;text-align:right">' + o.body + '</td></tr>' +
+      '<tr><td style="padding:26px 28px 28px;font-family:' + FONT + ';color:' + C.ink + ';font-size:15px;line-height:1.85;text-align:' + start + '">' + o.body + '</td></tr>' +
       // footer
       '<tr><td style="background:' + C.light + ';padding:16px 24px;font-family:' + FONT + '">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl"><tr>' +
           '<td align="right" valign="middle" style="font-size:13px;color:' + C.dark + ';line-height:1.7" dir="ltr">' +
             '<b>For Support:</b> Dial <b style="font-size:18px;color:' + C.purple + '">*</b> or Send email to: ' +
             '<a href="mailto:servicedesk@sr.edu.sa" style="color:' + C.purple + ';font-weight:bold;text-decoration:none">servicedesk@sr.edu.sa</a></td>' +
@@ -1117,8 +1201,10 @@ function layout_(o) {
         '</tr></table></td></tr>' +
     '</table>' +
     '<div style="font-family:' + FONT + ';font-size:12px;color:' + C.muted + ';padding:14px 8px 0;line-height:1.7">' +
-      'رسالة آلية من نظام حجز Coffee with IT — مركز عمليات تقنية المعلومات (ITOC)<br>' +
-      'الإدارة التنفيذية للاتصالات وتقنية المعلومات — جامعة سليمان الراجحي</div>' +
+      E_('رسالة آلية من نظام حجز Coffee with IT — مركز عمليات تقنية المعلومات (ITOC)<br>' +
+         'الإدارة التنفيذية للاتصالات وتقنية المعلومات — جامعة سليمان الراجحي',
+         'Automated message from the Coffee with IT booking system — IT Operations Center (ITOC)<br>' +
+         'Executive Directorate of Communications & IT — Sulaiman Al Rajhi University') + '</div>' +
     '</td></tr></table></body></html>';
 }
 
@@ -1152,10 +1238,10 @@ function whereBlock_(b) {
     const link = /^https?:\/\//i.test(b.where || '') ? b.where : DEFAULT_ZOOM_LINK;
     const id = zoomMeetingId_(link);
     return '<div style="background:' + C.blueLight + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-      '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">رابط اجتماع Zoom</div>' +
-      button_('انضم إلى الجلسة عبر Zoom', link, C.blue) +
+      '<div style="font-weight:bold;color:#08537f;margin-bottom:10px">' + E_('رابط اجتماع Zoom', 'Zoom meeting link') + '</div>' +
+      button_(E_('انضم إلى الجلسة عبر Zoom', 'Join the session on Zoom'), link, C.blue) +
       (id ? '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px"><tr>' +
-        '<td style="font-size:14px;color:' + C.ink + ';padding-left:8px">رقم الاجتماع:</td>' +
+        '<td style="font-size:14px;color:' + C.ink + ';padding-' + (LANG_ === 'en' ? 'right' : 'left') + ':8px">' + E_('رقم الاجتماع:', 'Meeting ID:') + '</td>' +
         // own cell = own bidi paragraph: the number groups never follow Arabic letters, so they keep their order
         '<td style="font-size:14px;color:' + C.ink + ';font-family:Consolas,Menlo,monospace;font-weight:bold;letter-spacing:0.5px">' + esc_(id) + '</td>' +
       '</tr></table>' : '') +
@@ -1164,7 +1250,7 @@ function whereBlock_(b) {
       '</div>';
   }
   return '<div style="background:' + C.light + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">' + (b.mode === 'office' ? 'مكان الجلسة — في مكتبك' : 'مكان الجلسة') + '</div>' +
+    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">' + (b.mode === 'office' ? E_('مكان الجلسة — في مكتبك', 'Location — at your office') : E_('مكان الجلسة', 'Location')) + '</div>' +
     '<div>' + esc_(b.where || '') + '</div></div>';
 }
 
@@ -1184,7 +1270,7 @@ function zoomMeetingId_(link) {
 
 /** "من 11:45 إلى 11:55" — Arabic connectors keep the order correct in every mail client. */
 function timeRange_(b) {
-  return '<span style="white-space:nowrap">من <b>' + esc_(b.time) + '</b> إلى <b>' + esc_(b.endTime) + '</b></span>';
+  return '<span style="white-space:nowrap">' + E_('من ', 'from ') + '<b>' + esc_(b.time) + '</b>' + E_(' إلى ', ' to ') + '<b>' + esc_(b.endTime) + '</b></span>';
 }
 
 function button_(text, href, color) {
@@ -1203,7 +1289,7 @@ function calendarLink_(b, s) {
     '&text=' + encodeURIComponent('Coffee with IT — ' + b.id) +
     '&dates=' + d + 'T' + t1 + '/' + d + 'T' + t2 + '&ctz=Asia/Riyadh' +
     '&location=' + encodeURIComponent(b.where || '') +
-    '&details=' + encodeURIComponent((b.topic || s.Topic || '') + '\nرقم الحجز: ' + b.id);
+    '&details=' + encodeURIComponent((b.topic || s.Topic || '') + E_('\nرقم الحجز: ', '\nBooking no.: ') + b.id);
 }
 
 function arDate_(ds) {

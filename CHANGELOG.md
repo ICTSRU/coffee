@@ -1,5 +1,22 @@
 # Changelog — Coffee with IT
 
+## v3.6 — 2026-10-22
+- **English version of every page** — booking, rating, admin dashboard and the GitHub sign-in page.
+  - «English / عربي» button in the white logo bar; the page switches instantly (no reload), including direction (LTR/RTL),
+    dates («Sunday, 25 October»), messages from the server, confirmation dialogs, the printed report and the CSV headers.
+  - First visit follows the browser language; the choice is remembered. The sign-in page passes the language (and theme) to the app (`?lang=en&theme=dark`).
+  - Logos keep the letterhead layout in both languages (university right, ICTD left, ITOC bottom-left).
+  - User data (names, departments, comments) is shown as entered.
+- **Dark mode on every page** — moon/sun button next to the language button. First visit follows the device setting and keeps
+  following it until the user picks one. Brand colours stay; cards, fields, pills and charts use dark tokens. Printing always uses the light colours.
+- **E-mails in the language the person booked in** — confirmation, cancellation, reminder and thank-you + rating (subject, body,
+  dates, attendance mode, office location, footer). New Bookings column `Lang` (`ar` / `en`). Calendar-invitation text follows it too.
+  «إرسال نسخة تجريبية إليّ» sends the test in the dashboard's current language.
+- **English names for topics** — new Topics column `TopicEn` (added automatically). Set it when adding a topic, or with «✎ الاسم الإنجليزي»
+  in the topics list. Used on the English booking page, the rating page and English e-mails; the Arabic name stays the stored value.
+- Optional setting **`OnsiteLocationEn`** — English text for the IT office location (falls back to `OnsiteLocation`).
+- Source of the language/theme layer: `i18n/` (`runtime.js`, `theme.css`, `en.py` dictionary, `build.py` injects them into the pages).
+
 ## v3.5 — 2026-10-22
 - **Tech background now comes from the shared SRU Brand Kit** (`https://ictsru.github.io/brand/css/sru-tech-bg.css`) instead of a copy inside
   each page: header bands carry the class `sru-tech-bg`, footers `sru-tech-bg-dark`. One update to the kit restyles this platform and every other one.

@@ -3,6 +3,215 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script id="cwi-runtime">/* Coffee with IT · language + theme · v1.0 (app v3.6)
+   - Language: saved choice › ?lang= in the URL › browser language. Theme: saved choice › device setting (follows it live).
+   - The page markup stays Arabic; this layer translates text nodes and attributes (placeholder, title, aria-label, alt)
+     with the EN dictionary and the patterns below, including content rendered later (MutationObserver).
+   - Mark any element with data-noi18n to leave it untouched. */
+(function () {
+  'use strict';
+  var KL = 'cwit.lang', KT = 'cwit.theme';
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function put(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function qp(name) { var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search); return m ? decodeURIComponent(m[1]) : ''; }
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function sysTheme() { return mq && mq.matches ? 'dark' : 'light'; }
+  var urlLang = qp('lang'), urlTheme = qp('theme');
+  if (urlLang === 'ar' || urlLang === 'en') put(KL, urlLang);
+  if (urlTheme === 'dark' || urlTheme === 'light') put(KT, urlTheme);
+  var lang = get(KL), theme = get(KT);
+  var CWI = window.CWI = {
+    lang: (lang === 'ar' || lang === 'en') ? lang : (/^ar/i.test((navigator.languages && navigator.languages[0]) || navigator.language || 'ar') ? 'ar' : 'en'),
+    langSet: lang === 'ar' || lang === 'en',
+    theme: (theme === 'dark' || theme === 'light') ? theme : sysTheme(),
+    themeSet: theme === 'dark' || theme === 'light',
+    listeners: [],
+    onChange: function (fn) { CWI.listeners.push(fn); }
+  };
+  function applyRoot() {
+    var h = document.documentElement;
+    h.setAttribute('lang', CWI.lang); h.setAttribute('dir', CWI.lang === 'ar' ? 'rtl' : 'ltr'); h.setAttribute('data-theme', CWI.theme);
+  }
+  applyRoot();
+  if (mq) (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(function () {
+    if (!CWI.themeSet) { CWI.theme = sysTheme(); applyRoot(); syncButtons(); fire('theme'); }
+  });
+
+  /* ---------- translation ---------- */
+  var EN = {"جامعة سليمان الراجحي":"Sulaiman Al Rajhi University","الإدارة التنفيذية للاتصالات وتقنية المعلومات":"Executive Directorate of Communications & IT","Coffee with IT — قهوة مع تقنية المعلومات":"Coffee with IT","حدث خطأ غير متوقع.":"An unexpected error occurred.","جارٍ التحميل…":"Loading…","الأحد":"Sunday","الاثنين":"Monday","الثلاثاء":"Tuesday","الأربعاء":"Wednesday","الخميس":"Thursday","الجمعة":"Friday","السبت":"Saturday","يناير":"January","فبراير":"February","مارس":"March","أبريل":"April","مايو":"May","يونيو":"June","يوليو":"July","أغسطس":"August","سبتمبر":"September","أكتوبر":"October","نوفمبر":"November","ديسمبر":"December","احجز جلسة Coffee with IT":"Book a Coffee with IT session","احجز جلسة":"Book a","جلسة قصيرة مع فريق تقنية المعلومات — اختر الموضوع والموعد المناسبين لك":"A short session with the IT team — choose the topic and time that suit you","مدة الجلسة 10 دقائق":"Session length: 10 minutes","دقائق":"minutes","مسجّل الدخول:":"Signed in:","لوحة الإدارة":"Admin dashboard","جارٍ تحميل المواعيد المتاحة…":"Loading available times…","حجوزاتي القائمة":"My upcoming bookings","اختر التاريخ":"Choose a date","لا توجد مواعيد متاحة حاليًا. يرجى المحاولة لاحقًا.":"No times are available right now. Please try again later.","اختر الوقت":"Choose a time","اختر التاريخ أولًا.":"Choose a date first.","طريقة الحضور":"Attendance","حضوري":"In person","في مقر الإدارة التنفيذية للاتصالات وتقنية المعلومات":"At the Executive Directorate of Communications & IT","في مكتبك":"At your office","حضوري — يزورك فريق تقنية المعلومات في مكتبك":"In person — the IT team visits you at your office","عن بُعد عبر":"Remote via","يصلك رابط الاجتماع بالبريد الإلكتروني":"You will receive the meeting link by e-mail","أين مكتبك؟":"Where is your office?","رقم المبنى":"Building no.","رقم المكتب":"Office no.","مثال: 1":"e.g. 1","مثال: 2122":"e.g. 2122","بياناتك":"Your details","موضوع الجلسة":"Session topic","اختر موضوع الجلسة…":"Choose a session topic…","✎ موضوع آخر أو سؤال تود مناقشته…":"✎ Another topic or a question you'd like to discuss…","اكتب الموضوع أو السؤال الذي تود مناقشته":"Write the topic or question you'd like to discuss","مثال: كيف أشارك ملفًا كبيرًا مع جهة خارجية بأمان؟":"e.g. How do I share a large file with an external party securely?","الاسم":"Name","البريد الإلكتروني":"E-mail","تمت تعبئته من حساب الدخول":"Filled in from your sign-in account","الإدارة":"Department","اختر الإدارة…":"Choose your department…","رقم التحويلة":"Extension","ملاحظات إضافية (اختياري)":"Additional notes (optional)","ملخص الحجز":"Booking summary","الموضوع":"Topic","التاريخ":"Date","الوقت":"Time","الحضور":"Attendance","أكمل الحقول المطلوبة (*) لتفعيل زر التأكيد.":"Complete the required fields (*) to enable the confirm button.","تأكيد الحجز":"Confirm booking","جارٍ الحجز…":"Booking…","✓ تم تأكيد الحجز":"✓ Booking confirmed","تم تأكيد حجزك":"Your booking is confirmed","أرسلنا تفاصيل الحجز إلى بريدك الجامعي":"We have sent the booking details to your university e-mail","، مع دعوة في التقويم":", with a calendar invitation","العودة إلى المواعيد":"Back to available times","رقم الحجز":"Booking no.","مكتمل":"Full","محجوز":"Booked","إلغاء":"Cancel","تم إلغاء الحجز.":"Booking cancelled.","حضوري — في مكتبك":"In person — at your office","عن بُعد (Zoom)":"Remote (Zoom)","يرجى اختيار موضوع الجلسة.":"Please choose a session topic.","يرجى كتابة الموضوع أو السؤال الذي تود مناقشته.":"Please write the topic or question you'd like to discuss.","يرجى إدخال رقم المبنى.":"Please enter the building number.","يرجى إدخال رقم المكتب.":"Please enter the office number.","يرجى إدخال الاسم.":"Please enter your name.","يرجى إدخال بريد إلكتروني صحيح.":"Please enter a valid e-mail address.","يرجى اختيار الإدارة.":"Please choose your department.","الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]":"Executive Directorate of Communications & IT — [Building / Room]","حماية بيانات الاجتماعات عند استخدام Read AI":"Protecting meeting data when using Read AI","إعدادات مشاركة تقارير Read AI":"Read AI report-sharing settings","الاستخدام الآمن لأدوات الذكاء الاصطناعي":"Safe use of AI tools","لديك حجز قائم بالفعل. يمكنك إلغاؤه من «حجوزاتي» ثم الحجز من جديد.":"You already have an upcoming booking. Cancel it under “My bookings” to book again.","هذا الموعد غير متاح.":"This time is not available.","انتهى هذا الموعد، يرجى اختيار موعد آخر.":"This time has passed — please choose another.","عذرًا، تم حجز هذا الموعد للتو. يرجى اختيار موعد آخر.":"Sorry, this time was just booked. Please choose another.","بيانات الحجز غير مكتملة.":"The booking details are incomplete.","الموضوع المختار لم يعد متاحًا — حدّث الصفحة واختر موضوعًا من القائمة.":"The selected topic is no longer available — refresh the page and choose a topic from the list.","اكتب الموضوع أو السؤال الذي تود مناقشته.":"Write the topic or question you'd like to discuss.","أدخل رقم المبنى ورقم المكتب للجلسة الحضورية في مكتبك.":"Enter the building and office number for a session at your office.","لم يتم العثور على الحجز.":"Booking not found.","لم يتم العثور على الحجز. تأكد من فتح الرابط من رسالة التقييم.":"Booking not found. Make sure you opened the link from the rating e-mail.","رابط التقييم خاص بصاحب الحجز. سجّل الدخول بالحساب الذي حجزت به.":"This rating link belongs to the person who booked. Sign in with the account you booked with.","رابط التقييم خاص بصاحب الحجز.":"This rating link belongs to the person who booked.","هذا الحجز ملغى، لا يمكن تقييمه.":"This booking was cancelled and cannot be rated.","يرجى اختيار التقييم من 1 إلى 5.":"Please select a rating from 1 to 5.","يمكنك تقييم الجلسة بعد انتهائها.":"You can rate the session after it ends.","الدخول متاح فقط بالبريد الجامعي @sr.edu.sa":"Sign-in is available only with a university @sr.edu.sa account","هذه الصفحة متاحة لمسؤولي النظام فقط.":"This page is available to system administrators only.","تقييم جلسة Coffee with IT":"Rate your Coffee with IT session","قيّم جلسة":"Rate your","رأيك يساعدنا على تطوير جلساتنا":"Your feedback helps us improve our sessions","الجلسة":"Session","ما مدى رضاك العام عن الجلسة؟":"Overall, how satisfied were you with the session?","ما مقترحاتك لتحسين جلسات Coffee with IT؟":"What would you suggest to improve Coffee with IT sessions?","اختياري":"Optional","إرسال التقييم":"Submit rating","جارٍ الإرسال…":"Sending…","شكرًا لتقييمك":"Thank you for your feedback","يمكنك تعديل تقييمك في أي وقت من نفس الرابط.":"You can change your rating at any time from the same link.","تعديل التقييم":"Edit rating","سبق أن قيّمت هذه الجلسة — يمكنك تعديل تقييمك.":"You have already rated this session — you can update your answer.","يرجى اختيار التقييم من 1 إلى 5":"Please select a rating from 1 to 5","غير راضٍ إطلاقًا":"Very dissatisfied","غير راضٍ":"Dissatisfied","محايد":"Neutral","راضٍ":"Satisfied","راضٍ جدًا":"Very satisfied","احجز جلسة Coffee with IT — تسجيل الدخول":"Book a Coffee with IT session — Sign in","10 دقائق فقط — حضوريًا في تقنية المعلومات أو عن بُعد عبر":"Just 10 minutes — in person at IT or remotely via","اختر التاريخ والوقت وطريقة الحضور المناسبة لك، وسيصلك تأكيد الحجز على بريدك الجامعي.":"Choose the date, time and attendance mode that suit you, and you will receive a confirmation at your university e-mail.","تسجيل الدخول متاح فقط بالبريد الجامعي":"Sign-in is available only with your university e-mail",". ستنتقل بعد الضغط إلى صفحة تسجيل الدخول من Google.":". You will be taken to Google's sign-in page.","تسجيل الدخول بحساب الجامعة":"Sign in with your university account","رمز QR لصفحة الحجز ictsru.github.io/coffee":"QR code for the booking page ictsru.github.io/coffee","افتحها على جوالك":"Open it on your phone","امسح الرمز بكاميرا الجوال لفتح صفحة الحجز.":"Scan the code with your phone camera to open the booking page.","إذا كنت مسجّلًا بحساب آخر، اختر حساب الجامعة من قائمة حسابات Google. ·":"If you are signed in with another account, choose your university account from Google's account list. ·","لوحة إدارة حجوزات Coffee with IT":"Coffee with IT bookings dashboard","لوحة إدارة حجوزات":"Bookings dashboard —","· آخر تحديث:":"· Updated:","↻ تحديث":"↻ Refresh","فتح Google Sheet":"Open Google Sheet","صفحة الحجز":"Booking page","جارٍ تحميل البيانات…":"Loading data…","المؤشرات":"Indicators","الفلاتر":"Filters","تصفية الحجوزات وإعداد التقرير":"Filter bookings and build the report","من تاريخ":"From date","إلى تاريخ":"To date","الحالة":"Status","الكل":"All","مؤكد":"Confirmed","ملغى":"Cancelled","حضوري (مقر تقنية المعلومات)":"In person (IT office)","حضوري — في مكتب الموظف":"In person — at the employee's office","الحضور الفعلي":"Actual attendance","حضر":"Attended","لم يحضر":"No-show","غير مسجّل":"Not recorded","كل الإدارات":"All departments","كل المواضيع":"All topics","مقدم الجلسة":"Presenter","كل المقدمين":"All presenters","غير محدد":"Not set","بحث (الاسم، البريد، رقم الحجز، المقدم، الملاحظات)":"Search (name, e-mail, booking no., presenter, notes)","ابحث…":"Search…","فترة سريعة:":"Quick range:","اليوم":"Today","القادمة":"Upcoming","هذا الأسبوع":"This week","هذا الشهر":"This month","مسح الفلاتر":"Clear filters","⬇ تصدير Excel (CSV)":"⬇ Export Excel (CSV)","🖨 طباعة التقرير / PDF":"🖨 Print report / PDF","مقدمو الجلسات":"Presenters","(حسب الفلاتر المحددة — تُحتسب الجلسات المؤكدة المسند لها مقدم، ولا يُحتسب «لم يحضر»)":"(by the selected filters — confirmed sessions with a presenter; no-shows excluded)","عدد الجلسات":"Sessions","إجمالي الدقائق":"Total minutes","متوسط المدة":"Avg. duration","متوسط التقييم":"Avg. rating","إجمالي الدقائق لكل مقدم":"Total minutes per presenter","تقييم الجلسات":"Session ratings","(حسب الفلاتر المحددة)":"(by the selected filters)","توزيع التقييمات":"Rating distribution","متوسط التقييم حسب الموضوع":"Average rating by topic","آخر المقترحات والتعليقات":"Latest suggestions and comments","✉ إرسال الشكر والتقييم للجلسات المنتهية":"✉ Send thank-you & rating to ended sessions","إرسال نسخة تجريبية إليّ":"Send me a test copy","تفعيل الإرسال التلقائي":"Turn on automatic sending","مواضيع الجلسات":"Session topics","(تظهر المواضيع المفعّلة في القائمة المنسدلة بصفحة الحجز)":"(active topics appear in the booking page drop-down)","موضوع جديد:":"New topic:","مثال: الاستخدام الآمن لأدوات الذكاء الاصطناعي":"e.g. الاستخدام الآمن لأدوات الذكاء الاصطناعي","+ إضافة الموضوع":"+ Add topic","قائمة مقدمي الجلسات":"Presenter list","(تظهر الأسماء المفعّلة في القائمة المنسدلة عند تسجيل تفاصيل الجلسة)":"(active names appear in the drop-down when recording session details)","إضافة:":"Add:","اكتب الاسم":"Type the name","+ إضافة":"+ Add","صلاحيات لوحة الإدارة":"Admin dashboard access","صلاحيات الدخول على لوحة الإدارة":"Admin dashboard access","إدارة الصلاحيات متاحة لمالك النظام فقط — القائمة للعرض.":"Only the system owner can manage access — this list is read-only.","منح صلاحية:":"Grant access:","+ منح الصلاحية":"+ Grant access","مالك النظام لديه الصلاحية دائمًا ولا يمكن إيقافه. أي حساب آخر يُمنح أو يُوقف من هنا مباشرة دون تعديل الكود.":"The system owner always has access and cannot be suspended. Any other account is granted or suspended here — no code changes needed.","الحجوزات حسب الموضوع":"Bookings by topic","الحجوزات حسب الإدارة":"Bookings by department","الحجوزات حسب اليوم":"Bookings by day","سجل الحجوزات":"Bookings log","الموعد":"Slot","الموظف":"Employee","مقدم الجلسة / المدة":"Presenter / duration","الملاحظات":"Notes","التقييم":"Rating","إجراء":"Action","لا توجد حجوزات مطابقة للفلاتر.":"No bookings match the filters.","تفاصيل الجلسة":"Session details","الوقت المستغرق (بالدقائق)":"Actual duration (minutes)","مثال: 10":"e.g. 10","مدة الجلسة المخططة:":"Planned session length:","دقائق. اتركه فارغًا إن لم تُعقد الجلسة.":"minutes. Leave empty if the session did not take place.","ملاحظات على الجلسة":"Session notes","ما الذي نوقش، أسئلة الموظف، إجراءات متابعة…":"What was discussed, the employee's questions, follow-up actions…","حفظ":"Save","حجوزات مؤكدة":"Confirmed bookings","جلسات قادمة":"Upcoming sessions","حضوري / عن بُعد":"In person / remote","نسبة الحضور الفعلي":"Attendance rate","إجمالي دقائق الجلسات":"Total session minutes","حجوزات ملغاة":"Cancelled bookings","مرات الدخول للصفحة":"Page sign-ins","إجمالي":"Total","لا توجد بيانات.":"No data.","منتهٍ":"Ended","في المكتب":"At office","موضوع مقترح":"Suggested topic","المدة غير مسجّلة":"Duration not recorded","بانتظار الرد":"Awaiting reply","✎ تسجيل التفاصيل":"✎ Record details","✎ تعديل التفاصيل":"✎ Edit details","↻ إعادة إرسال التقييم":"↻ Resend rating","✉ إرسال الشكر والتقييم":"✉ Send thank-you & rating","الجلسة:":"Session:","الموظف:":"Employee:","عدد التقييمات":"Ratings","نسبة الاستجابة":"Response rate","نسبة الرضا":"Satisfaction","راضٍ أو راضٍ جدًا (4–5)":"Satisfied or very satisfied (4–5)","لا توجد تقييمات بعد.":"No ratings yet.","لا توجد تعليقات بعد.":"No comments yet.","الإرسال التلقائي مفعّل":"Automatic sending on","الإرسال التلقائي للشكر موقوف من الإعدادات":"Automatic thank-you is off in Settings","الإرسال التلقائي غير مفعّل":"Automatic sending off","عدد مقدمي الجلسات":"Presenters","عدد الجلسات المقدّمة":"Sessions delivered","متوسط مدة الجلسة":"Avg. session length","دقيقة":"minutes","لم تُسند جلسات لمقدمين بعد — استخدم «✎ تسجيل التفاصيل» في سجل الحجوزات.":"No sessions assigned to presenters yet — use “✎ Record details” in the bookings log.","الإجمالي":"Total","لا توجد مدد مسجّلة بعد.":"No durations recorded yet.","لا توجد أسماء بعد — أضف أول مقدم.":"No names yet — add the first presenter.","مفعّل":"Active","موقوف":"Inactive","إيقاف":"Suspend","تفعيل":"Activate","حذف":"Remove","— اختر من فريق ITOC —":"— Choose from the ITOC team —","اسم آخر (خارج الفريق)…":"Another name (outside the team)…","بريد آخر @sr.edu.sa…":"Another @sr.edu.sa e-mail…","تم إيقاف الاسم — لن يظهر في القائمة المنسدلة.":"Name suspended — it will no longer appear in the drop-down.","تم تفعيل الاسم.":"Name activated.","مالك النظام":"System owner","مسموح":"Allowed","تم حذف الصلاحية.":"Access removed.","تم تفعيل صلاحية الدخول.":"Access activated.","تم إيقاف صلاحية الدخول.":"Access suspended.","— اختر مقدم الجلسة —":"— Choose a presenter —","الوقت المستغرق يجب أن يكون رقمًا بين 1 و240 دقيقة.":"The duration must be a number between 1 and 240 minutes.","اختر مقدم الجلسة قبل تسجيل الوقت المستغرق.":"Choose the presenter before recording the duration.","تقرير حجوزات جلسات Coffee with IT":"Coffee with IT bookings report","كل الفترات":"All periods","لا توجد مواضيع بعد — أضف أول موضوع.":"No topics yet — add the first one.","تم إيقاف الموضوع — لن يظهر في صفحة الحجز.":"Topic suspended — it will no longer appear on the booking page.","تم تفعيل الموضوع.":"Topic activated.","تم إلغاء الحجز وإبلاغ الموظف.":"Booking cancelled and the employee notified.","إرسال رسالة الشكر والتقييم لكل جلسة منتهية لم تُرسل لها بعد (يُستثنى من سُجّل «لم يحضر»)؟":"Send the thank-you & rating e-mail to every ended session that has not received it (no-shows excluded)?","لا توجد جلسات منتهية بانتظار رسالة الشكر.":"No ended sessions are waiting for a thank-you e-mail.","تم تفعيل الإرسال التلقائي كل ساعة: التذكير قبل الجلسة، والشكر والتقييم بعدها.":"Hourly automatic sending is on: reminders before sessions, thank-you & rating after them.","تمت إضافة الموضوع وأصبح متاحًا في صفحة الحجز.":"Topic added and now available on the booking page.","أدخل بريدًا جامعيًا صحيحًا @sr.edu.sa":"Enter a valid university @sr.edu.sa e-mail","موضوع آخر (مقترح من الموظف)":"Other topic (suggested by the employee)","مقترح من الموظف":"Suggested by employee","من القائمة":"From list","تاريخ التسجيل":"Registered at","نوع الموضوع":"Topic type","البريد":"E-mail","التحويلة":"Extension","مكان الجلسة (المكتب)":"Location (office)","الوقت المستغرق (دقيقة)":"Duration (min)","ملاحظات الجلسة":"Session notes","ملاحظات الموظف":"Employee notes","التقييم (1-5)":"Rating (1-5)","تعليق التقييم":"Rating comment","إرسال الشكر":"Thank-you sent","الاسم الإنجليزي":"English name","✎ الاسم الإنجليزي":"✎ English name","الاسم بالإنجليزية (اختياري)":"English name (optional)","الاسم الإنجليزي للموضوع (يظهر في صفحة الحجز والبريد باللغة الإنجليزية):":"English name of the topic (shown on the English booking page and in English e-mails):","تم حفظ الاسم الإنجليزي.":"English name saved.","هذا الموضوع موجود بالفعل.":"This topic already exists.","اكتب اسم الموضوع.":"Type the topic name.","الموضوع غير موجود.":"Topic not found.","هذا الاسم موجود في القائمة بالفعل.":"This name is already in the list.","اختر أو اكتب اسم مقدم الجلسة.":"Choose or type the presenter's name.","اختر مقدم الجلسة من القائمة.":"Choose the presenter from the list.","الاسم غير موجود.":"Name not found.","هذا الحساب لديه صلاحية الدخول بالفعل.":"This account already has access.","هذا الحساب مالك النظام ولديه الصلاحية دائمًا.":"This account is the system owner and always has access.","لا يمكن تعديل صلاحية مالك النظام.":"The system owner's access cannot be changed.","لا يمكن حذف مالك النظام.":"The system owner cannot be removed.","الحساب غير موجود في قائمة الصلاحيات.":"The account is not in the access list.","البريد يجب أن يكون بالنطاق @sr.edu.sa":"The e-mail must be on the @sr.edu.sa domain","الحجز غير موجود أو ملغى مسبقًا.":"The booking does not exist or was already cancelled.","الحجز غير موجود أو ملغى.":"The booking does not exist or is cancelled.","لم تنتهِ الجلسة بعد.":"The session has not ended yet.","قيمة غير صالحة.":"Invalid value.","الوقت المستغرق يجب أن يكون بين 1 و240 دقيقة.":"The duration must be between 1 and 240 minutes.","الوضع الداكن":"Dark mode","الوضع الفاتح":"Light mode","التبديل إلى الإنجليزية":"Switch to English"};
+  var AR = /[\u0600-\u06FF]/;
+  var DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  var MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  var D = DAYS.join('|'), M = MONTHS.join('|');
+  function loc(s) { return String(s).replace(/مبنى\s*(\S+)\s*—\s*مكتب\s*(\S+)/g, 'Building $1 — Office $2'); }
+  function dates(s) {
+    return String(s)
+      .replace(new RegExp('(' + D + ') (\\d{1,2}) (' + M + ')(?: (\\d{4}))?', 'g'), function (m, d, n, mo, y) { return EN[d] + ', ' + n + ' ' + EN[mo] + (y ? ' ' + y : ''); })
+      .replace(new RegExp('(\\d{1,2}) (' + M + ')', 'g'), function (m, n, mo) { return n + ' ' + EN[mo]; });
+  }
+  function soft(s) { return toEn(s); }
+  // [pattern, replacement(match) → string]; groups are translated recursively with tr()
+  var PAT = [
+    [/^من (\d\d:\d\d) إلى (\d\d:\d\d)$/, function (m) { return 'From ' + m[1] + ' to ' + m[2]; }],
+    [/^(.+) · من (\d\d:\d\d) إلى (\d\d:\d\d)$/, function (m) { return dates(m[1]) + ' · ' + m[2] + '–' + m[3]; }],
+    [/^المواعيد المتاحة يوم (.+) \(مدة الجلسة (\d+) دقائق\)$/, function (m) { return 'Available times on ' + dates(m[1]) + ' (' + m[2] + '-minute session)'; }],
+    [/^(.+) — مكتمل$/, function (m) { return dates(m[1]) + ' — full'; }],
+    [/^(\d\d:\d\d) محجوز$/, function (m) { return m[1] + ' booked'; }],
+    [/^(.+) \(مبنى (.+) — مكتب (.*)\)$/, function (m) { return soft(m[1]) + ' (Building ' + m[2] + ' — Office ' + m[3] + ')'; }],
+    [/^مبنى (.+) — مكتب (.+)$/, function (m) { return 'Building ' + m[1] + ' — Office ' + m[2]; }],
+    [/^(.+?) · (مبنى .+)$/, function (m) { return soft(m[1]) + ' · ' + loc(m[2]); }],
+    [/^(\d\d:\d\d) · (.+)$/, function (m) { return m[1] + ' · ' + soft(m[2]); }],
+    [/^إلغاء حجز (.+?) \((.+)\)؟ سيُرسل إليه بريد بالإلغاء\.$/, function (m) { return 'Cancel the booking of ' + m[1] + ' (' + dates(m[2]) + ')? A cancellation e-mail will be sent.'; }],
+    [/^إلغاء حجز (.+)$/, function (m) { return 'Cancel booking — ' + dates(m[1]); }],
+    [/^(\d+) موظفًا$/, function (m) { return m[1] + ' staff'; }],
+    [/^المتاح: (\d+) موعدًا$/, function (m) { return 'Available: ' + m[1] + ' slots'; }],
+    [/^(\d+) منها في مكتب الموظف$/, function (m) { return m[1] + ' at the employee\'s office'; }],
+    [/^(\d+) حضر · (\d+) لم يحضر$/, function (m) { return m[1] + ' attended · ' + m[2] + ' no-show'; }],
+    [/^(\d+) جلسة مقدّمة$/, function (m) { return m[1] + ' sessions delivered'; }],
+    [/^(\d+)% من الإجمالي$/, function (m) { return m[1] + '% of total'; }],
+    [/^من (\d+) اسمًا مفعّلًا$/, function (m) { return 'of ' + m[1] + ' active names'; }],
+    [/^(\d+) بمدة مسجّلة$/, function (m) { return m[1] + ' with duration'; }],
+    [/^المخطط: (\d+) د$/, function (m) { return 'Planned: ' + m[1] + ' min'; }],
+    [/^([\d,]+) د$/, function (m) { return m[1] + ' min'; }],
+    [/^([\d,]+) دقيقة$/, function (m) { return m[1] + ' minutes'; }],
+    [/^(\d+) بتعليق$/, function (m) { return m[1] + ' with comment'; }],
+    [/^من (\d+) رسالة تقييم$/, function (m) { return 'of ' + m[1] + ' rating e-mails'; }],
+    [/^(\d+) جلسة$/, function (m) { return m[1] + ' sessions'; }],
+    [/^(\d+) حجز$/, function (m) { return m[1] + ' bookings'; }],
+    [/^(\d) · (.+)$/, function (m) { return m[1] + ' · ' + soft(m[2]); }],
+    [/^(.+): (\d+) \((\d+)%\)$/, function (m) { return soft(m[1]) + ': ' + m[2] + ' (' + m[3] + '%)'; }],
+    [/^(.*) · تحويلة$/, function (m) { return soft(m[1]) + ' · Ext.'; }],
+    [/^(حضر|لم يحضر) — (.+)$/, function (m) { return EN[m[1]] + ' — ' + m[2]; }],
+    [/^أُرسلت في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
+    [/^إرسال الشكر والتقييم إلى (.+)$/, function (m) { return 'Send thank-you & rating to ' + m[1]; }],
+    [/^تفاصيل جلسة (.+)$/, function (m) { return 'Session details — ' + m[1]; }],
+    [/^حذف صلاحية (.+) نهائيًا من القائمة؟$/, function (m) { return 'Permanently remove ' + m[1] + ' from the access list?'; }],
+    [/^حذف صلاحية (.+)$/, function (m) { return 'Remove access — ' + m[1]; }],
+    [/^(.+) \(موقوف\)$/, function (m) { return m[1] + ' (inactive)'; }],
+    [/^الفترة: (.+?) · عدد السجلات: (\d+)(?: · الموضوع: (.+))?$/, function (m) { return 'Period: ' + soft(m[1]) + ' · Records: ' + m[2] + (m[3] ? ' · Topic: ' + soft(m[3]) : ''); }],
+    [/^أُعدّ بواسطة (.+)$/, function (m) { return 'Prepared by ' + m[1]; }],
+    [/^من (.+) إلى (.+)$/, function (m) { return 'From ' + dates(m[1]) + ' to ' + dates(m[2]); }],
+    [/^من (.+)$/, function (m) { return 'From ' + dates(m[1]); }],
+    [/^إلى (.+)$/, function (m) { return 'To ' + dates(m[1]); }],
+    [/^تم إرسال (\d+) رسالة شكر وتقييم\.$/, function (m) { return m[1] + ' thank-you & rating e-mails sent.'; }],
+    [/^أُرسلت نسخة تجريبية إلى (\S+)(?: من (\S+))?\.$/, function (m) { return 'Test copy sent to ' + m[1] + (m[2] ? ' from ' + m[2] : '') + '.'; }],
+    [/^تمت إضافة «(.+)» إلى قائمة مقدمي الجلسات\.$/, function (m) { return '“' + m[1] + '” added to the presenter list.'; }],
+    [/^تم منح صلاحية الدخول إلى (.+)\.$/, function (m) { return 'Access granted to ' + m[1] + '.'; }],
+    [/^تم حفظ تفاصيل جلسة (.+)\.$/, function (m) { return 'Session details saved for ' + m[1] + '.'; }],
+    [/^تم إرسال رسالة الشكر والتقييم إلى (.+)\.$/, function (m) { return 'Thank-you & rating e-mail sent to ' + m[1] + '.'; }],
+    [/^(إرسال|إعادة إرسال) رسالة الشكر والتقييم إلى (.+)؟$/, function (m) { return (m[1] === 'إرسال' ? 'Send' : 'Resend') + ' the thank-you & rating e-mail to ' + m[2] + '?'; }],
+    [/^منح (.+) صلاحية الدخول على لوحة الإدارة \(عرض كل الحجوزات وتعديلها\)؟$/, function (m) { return 'Give ' + m[1] + ' access to the admin dashboard (view and edit all bookings)?'; }],
+    [/^إدارة صلاحيات الدخول متاحة لمالك النظام فقط \((.+)\)\.$/, function (m) { return 'Only the system owner can manage access (' + m[1] + ').'; }],
+    [/^تعذّر الإرسال: (.+)$/, function (m) { return 'Could not send: ' + soft(m[1]); }],
+    [/^(.+) \((\d+)\)$/, function (m) { return soft(m[1]) + ' (' + m[2] + ')'; }],
+    [/^(.+): ([\d.,]+(?:\/5)?)$/, function (m) { return soft(m[1]) + ': ' + m[2]; }],
+    [/^· (.+)$/, function (m) { return '· ' + soft(m[1]); }]
+  ];
+  function tr(s) { return CWI.lang === 'en' ? toEn(s) : s; }
+  /* always English — also used to recognise text this layer already translated */
+  function toEn(s) {
+    if (s == null) return s;
+    s = String(s);
+    var k = s.trim();
+    if (!k || !AR.test(k)) return s;
+    var v = EN[k];
+    if (v == null) for (var i = 0; i < PAT.length && v == null; i++) { var m = k.match(PAT[i][0]); if (m) v = PAT[i][1](m); }
+    if (v == null) { var d = loc(dates(k)); if (d !== k) v = d; }
+    if (v == null) return s;
+    var a = s.indexOf(k);
+    return s.slice(0, a) + v + s.slice(a + k.length);
+  }
+  CWI.t = tr;
+  CWI.pick = function (ar, en) { return CWI.lang === 'en' ? en : ar; };
+
+  var origText = new WeakMap(), origAttr = new WeakMap();
+  var ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  function skipped(el) { return el && el.closest && el.closest('script,style,[data-noi18n]'); }
+  function doText(n) {
+    var cur = n.nodeValue, o = origText.get(n);
+    if (o === undefined || (cur !== o && cur !== toEn(o))) { o = cur; origText.set(n, o); }
+    var want = CWI.lang === 'en' ? tr(o) : o;
+    if (cur !== want) n.nodeValue = want;
+  }
+  function doAttrs(el) {
+    var map = origAttr.get(el);
+    for (var i = 0; i < ATTRS.length; i++) {
+      var a = ATTRS[i]; if (!el.hasAttribute(a)) continue;
+      var cur = el.getAttribute(a);
+      if (!map) { map = {}; origAttr.set(el, map); }
+      var o = map[a];
+      if (o === undefined || (cur !== o && cur !== toEn(o))) { o = cur; map[a] = o; }
+      var want = CWI.lang === 'en' ? tr(o) : o;
+      if (cur !== want) el.setAttribute(a, want);
+    }
+  }
+  function walk(node) {
+    if (node.nodeType === 3) { var pn = node.parentNode; if (pn && !skipped(pn) && pn.nodeName !== 'TEXTAREA') doText(node); return; }
+    if (node.nodeType !== 1 || skipped(node)) return;
+    doAttrs(node);
+    if (node.nodeName === 'TEXTAREA') return;   // placeholder only — never what the user typed
+    for (var c = node.firstChild; c; c = c.nextSibling) walk(c);
+  }
+  var titleAr = null;
+  function translateAll() {
+    if (titleAr === null) titleAr = document.title;
+    document.title = CWI.lang === 'en' ? toEn(titleAr) : titleAr;
+    if (document.body) walk(document.body);
+  }
+  var obs = new MutationObserver(function (list) {
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (m.type === 'childList') for (var j = 0; j < m.addedNodes.length; j++) walk(m.addedNodes[j]);
+      else if (m.type === 'characterData') { var pn = m.target.parentNode; if (pn && !skipped(pn) && pn.nodeName !== 'TEXTAREA') doText(m.target); }
+      else if (m.type === 'attributes' && !skipped(m.target)) doAttrs(m.target);
+    }
+  });
+
+  /* ---------- buttons (inserted in the white brand bar) ---------- */
+  var ICON_MOON = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+  var ICON_SUN = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+  var bLang, bTheme;
+  function syncButtons() {
+    if (!bLang) return;
+    bLang.textContent = CWI.lang === 'ar' ? 'English' : 'عربي';
+    bLang.setAttribute('lang', CWI.lang === 'ar' ? 'en' : 'ar');
+    bLang.setAttribute('aria-label', CWI.lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية');
+    var dark = CWI.theme === 'dark';
+    bTheme.innerHTML = dark ? ICON_SUN : ICON_MOON;
+    bTheme.setAttribute('aria-label', CWI.lang === 'en' ? (dark ? 'Light mode' : 'Dark mode') : (dark ? 'الوضع الفاتح' : 'الوضع الداكن'));
+    bTheme.setAttribute('title', bTheme.getAttribute('aria-label'));
+    bTheme.setAttribute('aria-pressed', String(dark));
+  }
+  function fire(what) { CWI.listeners.forEach(function (fn) { try { fn(what); } catch (e) { console.warn(e); } }); }
+  CWI.setLang = function (l) {
+    CWI.lang = l === 'en' ? 'en' : 'ar'; CWI.langSet = true; put(KL, CWI.lang);
+    applyRoot(); translateAll(); syncButtons(); fire('lang');
+  };
+  CWI.setTheme = function (t) {
+    CWI.theme = t === 'dark' ? 'dark' : 'light'; CWI.themeSet = true; put(KT, CWI.theme);
+    applyRoot(); syncButtons(); fire('theme');
+  };
+  function mountButtons() {
+    var host = document.querySelector('.brand .in');
+    if (!host) return;
+    var box = document.createElement('div');
+    box.className = 'cwi-prefs'; box.setAttribute('data-noi18n', '');
+    bLang = document.createElement('button'); bLang.type = 'button'; bLang.className = 'cwi-p cwi-lang';
+    bTheme = document.createElement('button'); bTheme.type = 'button'; bTheme.className = 'cwi-p cwi-theme';
+    bLang.addEventListener('click', function () { CWI.setLang(CWI.lang === 'ar' ? 'en' : 'ar'); });
+    bTheme.addEventListener('click', function () { CWI.setTheme(CWI.theme === 'dark' ? 'light' : 'dark'); });
+    box.appendChild(bLang); box.appendChild(bTheme);
+    host.insertBefore(box, host.children[1] || null);
+    syncButtons();
+  }
+  function start() {
+    mountButtons();
+    translateAll();
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script><!-- /cwi-runtime -->
 <title>احجز جلسة Coffee with IT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -33,17 +242,17 @@ button,input,textarea{font:inherit;color:inherit}
 .badge10 b{display:block;font-size:34px;font-weight:800}
 .badge10 span{font-size:14px;font-weight:700}
 .userbar{max-width:1000px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:14px}
-.chip{background:var(--purple-light);color:var(--purple-dark);border-radius:var(--radius);padding:2px 10px;font-weight:600}
+.chip{background:var(--purple-light);color:var(--heading);border-radius:var(--radius);padding:2px 10px;font-weight:600}
 
 main{max-width:820px;margin:0 auto;padding:16px 16px 40px}
-.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
 .card + .card{margin-top:16px}
-.step{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:20px;font-weight:800;color:var(--purple-dark)}
+.step{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:20px;font-weight:800;color:var(--heading)}
 .step i{font-style:normal;width:32px;height:32px;border-radius:50%;background:var(--purple);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
 .hint{color:var(--muted);font-size:14px;margin:-6px 0 12px}
 
 .dates{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
-.date{flex:0 0 auto;min-width:96px;min-height:72px;border:1px solid var(--border);background:#fff;border-radius:var(--radius);padding:8px 10px;cursor:pointer;text-align:center;line-height:1.3}
+.date{flex:0 0 auto;min-width:96px;min-height:72px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:8px 10px;cursor:pointer;text-align:center;line-height:1.3}
 .date b{display:block;font-size:22px}
 .date small{display:block;color:var(--muted);font-size:13px}
 .date[aria-pressed="true"]{background:var(--purple);border-color:var(--purple);color:#fff}
@@ -51,21 +260,21 @@ main{max-width:820px;margin:0 auto;padding:16px 16px 40px}
 .date:disabled{opacity:.45;cursor:not-allowed}
 
 .times{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
-.time{min-height:46px;border:1px solid var(--border);background:#fff;border-radius:var(--radius);cursor:pointer;font-weight:700}
+.time{min-height:46px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);cursor:pointer;font-weight:700}
 .time[aria-pressed="true"]{background:var(--purple);border-color:var(--purple);color:#fff}
-.time:disabled{background:#f3f1f6;color:#a59cb3;cursor:not-allowed;text-decoration:line-through}
+.time:disabled{background:var(--off-bg);color:var(--off-ink);cursor:not-allowed;text-decoration:line-through}
 
 .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:820px){.modes{grid-template-columns:minmax(0,1fr)}}
 .office-box{margin-top:12px;border:1px solid var(--purple);background:var(--purple-light);border-radius:var(--radius);padding:14px}
 .office-box .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
-.office-box p{margin:0 0 10px;font-size:14px;color:var(--purple-dark);font-weight:700}
-#topic2{font-size:17px;font-weight:700;min-height:52px;color:var(--purple-dark)}
+.office-box p{margin:0 0 10px;font-size:14px;color:var(--heading);font-weight:700}
+#topic2{font-size:17px;font-weight:700;min-height:52px;color:var(--heading)}
 #topic2 option{font-size:17px;font-weight:600;color:var(--ink);padding:6px}
-#topic2 option[value="__other"]{color:var(--purple);font-weight:800}
+#topic2 option[value="__other"]{color:var(--accent);font-weight:800}
 .topic-other{margin-top:10px}
 .topic-other textarea{font-size:16px}
-.mode{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;background:#fff}
+.mode{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;background:var(--surface)}
 .mode input{margin-top:6px;accent-color:var(--purple);width:18px;height:18px}
 .mode b{display:block;font-size:17px}
 .mode small{color:var(--muted)}
@@ -75,10 +284,10 @@ main{max-width:820px;margin:0 auto;padding:16px 16px 40px}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:560px){.fields{grid-template-columns:minmax(0,1fr)}}
 .field label{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
-.field input,.field textarea,.field select{width:100%;border:1px solid rgba(80,30,140,.25);border-radius:var(--radius);padding:10px 12px;background:#fff;min-height:44px}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--field-border);border-radius:var(--radius);padding:10px 12px;background:var(--surface);min-height:44px}
 .field textarea{min-height:80px;resize:vertical}
 .field select{appearance:auto}
-.field input[readonly]{background:var(--purple-light);color:var(--purple-dark)}
+.field input[readonly]{background:var(--purple-light);color:var(--heading)}
 .fhint{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .field input:focus,.field textarea:focus,.field select:focus,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 .full{grid-column:1/-1}
@@ -88,8 +297,8 @@ main{max-width:820px;margin:0 auto;padding:16px 16px 40px}
 .btn-primary{background:var(--purple);color:#fff}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
 .btn-done,.btn-done:disabled{background:#067647;border-color:#067647;color:#fff;opacity:1;cursor:default}
-.btn-secondary{background:#fff;color:var(--purple)}
-.btn-danger{background:#fff;color:var(--danger);border-color:var(--danger);min-height:36px;padding:4px 14px;font-size:14px}
+.btn-secondary{background:var(--surface);color:var(--accent)}
+.btn-danger{background:var(--surface);color:var(--danger);border-color:var(--danger);min-height:36px;padding:4px 14px;font-size:14px}
 
 .sum dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:15px}
 .sum dt{color:var(--muted)}
@@ -100,17 +309,17 @@ main{max-width:820px;margin:0 auto;padding:16px 16px 40px}
 .sum-hint{margin:12px 0 0;font-size:13px;color:var(--muted);text-align:center}
 .mine .bk + .bk{margin-top:10px}
 #mineCard{margin-bottom:20px}
-.mine h3{margin:0 0 10px;font-size:17px;color:var(--purple-dark)}
+.mine h3{margin:0 0 10px;font-size:17px;color:var(--heading)}
 .bk{border-top:1px solid var(--border);padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
 .empty{color:var(--muted);font-size:14px}
 
 .alert{border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-weight:600}
-.alert.err{background:#fef3f2;color:var(--danger);border:1px solid #fecdca}
-.alert.info{background:var(--blue-light);color:#08537f;border:1px solid #b9dcf0}
+.alert.err{background:var(--err-bg);color:var(--danger);border:1px solid var(--err-line)}
+.alert.info{background:var(--blue-light);color:var(--zoom-ink);border:1px solid #b9dcf0}
 .done{text-align:center;padding:28px 20px}
-.done .tick{width:64px;height:64px;border-radius:50%;background:#ecfdf3;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
-.done h2{margin:0 0 6px;color:var(--purple-dark)}
-.done dl{display:inline-grid;grid-template-columns:auto auto;gap:6px 16px;text-align:right;margin:14px auto;font-size:16px}
+.done .tick{width:64px;height:64px;border-radius:50%;background:var(--okbg);display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
+.done h2{margin:0 0 6px;color:var(--heading)}
+.done dl{display:inline-grid;grid-template-columns:auto auto;gap:6px 16px;text-align:start;margin:14px auto;font-size:16px}
 .done dt{color:var(--muted)} .done dd{margin:0;font-weight:700}
 .loading{padding:40px;text-align:center;color:var(--muted)}
 [hidden]{display:none!important}
@@ -124,7 +333,36 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 .itoc{display:block;background:#fff;border-radius:var(--radius);padding:6px 10px;line-height:0}
 .itoc img{height:46px;width:auto;display:block}
 .itoc:focus-visible{outline:2px solid #fff;outline-offset:2px}
-
+/* >>> cwi-theme */
+/* ===== Coffee with IT · theme tokens (light / dark) + language buttons · v1.0 (app v3.6) ===== */
+:root{--surface:#fff;--surface-2:#fbfaff;--field:#fff;--field-border:rgba(80,30,140,.25);--heading:#3a1464;--accent:#501e8c;
+  --off-bg:#f3f1f6;--off-ink:#a59cb3;--past-bg:#f2f4f7;--past-ink:#475467;--zoom-ink:#08537f;--office-bg:#fdf2fa;--office-ink:#9e165f;
+  --err-bg:#fef3f2;--err-line:#fecdca;--info-bg:#e6f3fa;--info-line:#b9dcf0;--info-ink:#08537f;--okbg:#ecfdf3;--ok-line:#abefc6;--star:#e8a317}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#120c1b;--surface:#1c1528;--surface-2:#241b33;--field:#150f20;--field-border:rgba(196,168,255,.30);
+  --ink:#ece6f5;--muted:#a99bbd;--border:rgba(196,168,255,.16);--purple-light:rgba(150,100,230,.22);--blue-light:rgba(56,152,214,.20);
+  --heading:#dccbff;--accent:#c9b0ff;--off-bg:#211a2c;--off-ink:#6b5f7d;--past-bg:rgba(255,255,255,.08);--past-ink:#b9b0c9;
+  --zoom-ink:#8fd0f5;--office-bg:rgba(238,70,188,.18);--office-ink:#f6addc;
+  --red:#f97066;--red-light:rgba(240,68,56,.16);--danger:#f97066;--green:#47cd89;--green-light:rgba(23,178,106,.18);--ok:#47cd89;
+  --amber:#fdb022;--amber-light:rgba(247,144,9,.18);--err-bg:rgba(240,68,56,.14);--err-line:rgba(240,68,56,.35);
+  --info-bg:rgba(56,152,214,.16);--info-line:rgba(56,152,214,.35);--info-ink:#a6dbf7;--okbg:rgba(23,178,106,.16);--ok-line:rgba(23,178,106,.35);--star:#fdb022}
+:root[data-theme="dark"] .brand{border-bottom-color:transparent}
+.cwi-prefs{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+.cwi-p{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:36px;padding:4px 12px;border-radius:4px;
+  border:1px solid rgba(80,30,140,.25);background:#fff;color:#501e8c;font:inherit;font-size:14px;font-weight:700;cursor:pointer;line-height:1}
+.cwi-p:hover{background:#f0ebf8}
+.cwi-p:focus-visible{outline:2px solid #0a6eaa;outline-offset:2px}
+.cwi-lang{font-family:'Cairo',Tahoma,Arial,sans-serif}
+.cwi-theme{padding:4px 8px}
+@media (max-width:520px){.cwi-p{min-height:32px;min-width:32px;padding:3px 8px;font-size:13px}.brand img{max-width:34%!important}}
+@media print{.cwi-prefs{display:none}
+  :root[data-theme="dark"]{color-scheme:light;--bg:#fff;--surface:#fff;--surface-2:#fbfaff;--field:#fff;--ink:#241436;--muted:#6b5a80;--border:rgba(80,30,140,.12);
+    --purple-light:#f0ebf8;--blue-light:#e6f3fa;--heading:#3a1464;--accent:#501e8c;--past-bg:#f2f4f7;--past-ink:#475467;--zoom-ink:#08537f;
+    --office-bg:#fdf2fa;--office-ink:#9e165f;--red:#b42318;--red-light:#fef3f2;--green:#067647;--green-light:#ecfdf3;--amber:#b54708;--amber-light:#fffaeb}}
+/* ===== end theme ===== */
+/* logo placement stays as on the university letterhead in both languages: SRU right, ICTD left; ITOC bottom-left */
+html[dir="ltr"] .brand .in{flex-direction:row-reverse}
+html[dir="ltr"] footer .in,html[dir="ltr"] footer .wrap{flex-direction:row-reverse}
+/* <<< cwi-theme */
 </style>
 <link rel="stylesheet" href="https://ictsru.github.io/brand/css/sru-tech-bg.css">
 </head>
@@ -148,7 +386,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
 
 <div class="userbar">
   <span>مسجّل الدخول: <span class="chip en" id="who">…</span></span>
-  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v3.5</span></span>
+  <span><a id="adminLink" class="chip" href="#" target="_top" hidden>لوحة الإدارة</a> <span class="en" id="ver">v3.6</span></span>
 </div>
 
 <main>
@@ -256,8 +494,13 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   var DEPARTMENTS = [{"label": "مكتب رئيس الجامعة", "items": ["مكتب رئيس الجامعة", "وحدة التوعية الفكرية", "مركز القيم والسلوك المهني", "مكتب إدارة الاستراتيجية", "إدارة التميز المؤسسي", "إدارة الاتصال المؤسسي", "إدارة المسؤولية المجتمعية", "إدارة المراجعة الداخلية", "مكتب الحوكمة وإدارة المخاطر والالتزام", "إدارة الشؤون القانونية"]}, {"label": "الإدارة التنفيذية لتطوير الأعمال", "items": ["الإدارة التنفيذية لتطوير الأعمال", "إدارة التدريب والاستشارات", "مركز التدريب", "مركز الاستشارات", "إدارة الشراكات", "إدارة تطوير المنتجات والخدمات", "مركز الابتكار وريادة الأعمال"]}, {"label": "عمداء الكليات", "items": ["عمداء الكليات", "كلية الطب", "كلية التمريض", "كلية الأعمال", "كلية العلوم التطبيقية"]}, {"label": "نائب الرئيس للشؤون الأكاديمية", "items": ["نائب الرئيس للشؤون الأكاديمية", "النائب المساعد لتجربة الطالب", "مكتب القبول", "سند", "مكتب المنح والحلول المالية", "مكتب التسجيل والإرشاد الأكاديمي", "إدارة الحياة الجامعية", "مكتب رعاية الخريجين", "النائب المساعد للتميز الأكاديمي", "مركز التعليم والتعلم", "قسم المهارات والمعارف الأساسية", "مركز التقييم والقياس", "إدارة التجهيزات التعليمية", "مكتب الاعتماد الأكاديمي", "النائب المساعد للدراسات العليا والبحث العلمي", "مكتب الدراسات العليا", "مكتب البحث العلمي"], "parents": {"سند": "مكتب القبول"}}, {"label": "المجلس العلمي", "items": ["المجلس العلمي"]}, {"label": "المشرفة على القسم النسائي", "items": ["المشرفة على القسم النسائي", "شطر الطالبات"]}, {"label": "الإدارة التنفيذية للاتصالات وتقنية المعلومات", "items": ["الإدارة التنفيذية للاتصالات وتقنية المعلومات", "إدارة الأمن السيبراني", "إدارة التحول الرقمي", "إدارة تقنية المعلومات", "مكتب إدارة البيانات"]}, {"label": "الإدارة التنفيذية للخدمات المشتركة", "items": ["الإدارة التنفيذية للخدمات المشتركة", "إدارة الشؤون المالية", "إدارة رأس المال البشري", "إدارة المرافق", "الإدارة الهندسية", "إدارة المشتريات", "إدارة المستودعات"]}];
   var OTHER = '__other';
   var MODE_TXT = { onsite: 'حضوري', office: 'حضوري — في مكتبك', zoom: 'عن بُعد (Zoom)' };
+  var topicsEn = {}, lastTopics = [], lastMine = [], onsite = { ar: '', en: '' };
+  var EN = function () { return window.CWI && CWI.lang === 'en'; };
+  /* topic as shown to the user: English name from the Topics sheet (TopicEn) on the English page */
+  function tName(t) { return EN() ? (topicsEn[t] || CWI.t(t)) : t; }
   function isOther() { return $('topic2').value === OTHER; }
-  function topicText() { return isOther() ? $('topicOther').value.trim() : $('topic2').value; }
+  function topicValue() { return isOther() ? $('topicOther').value.trim() : $('topic2').value; }
+  function topicText() { return isOther() ? $('topicOther').value.trim() : tName($('topic2').value); }
   function officeOk() { return state.mode !== 'office' || ($('building').value.trim() && $('office').value.trim()); }
   function modeText() {
     if (!state.mode) return '—';
@@ -299,7 +542,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     }
     return {
       getInitData: function () {
-        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '3.5', sessionMinutes: 10,
+        return Promise.resolve({ email: 'demo.user@sr.edu.sa', version: '3.6', sessionMinutes: 10,
           topic: 'حماية بيانات الاجتماعات عند استخدام Read AI',
           onsiteLocation: 'الإدارة التنفيذية للاتصالات وتقنية المعلومات — [المبنى / الغرفة]',
           days: days(), myBookings: mine.slice(), isAdmin: true, adminUrl: '#admin',
@@ -384,7 +627,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     ['Date', 'Time', 'Topic', 'Mode'].forEach(function (k) { $('s2' + k).textContent = v[k]; });
     $('s2Name').textContent = $('name').value.trim() || '—';
     $('s2Dept').textContent = $('dept').value || '—';
-    var ready = !!(state.date && state.time && state.mode && $('name').value.trim() && validEmail($('email').value.trim()) && $('dept').value && topicText().length >= (isOther() ? 3 : 1) && officeOk());
+    var ready = !!(state.date && state.time && state.mode && $('name').value.trim() && validEmail($('email').value.trim()) && $('dept').value && topicValue().length >= (isOther() ? 3 : 1) && officeOk());
     $('s2Hint').hidden = ready || state.booked;
     ['submit2'].forEach(function (id) {
       var b = $(id);
@@ -412,7 +655,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
   function submit() {
     showMsg('');
     if (!$('topic2').value) { showMsg('يرجى اختيار موضوع الجلسة.'); $('topic2').focus(); return; }
-    if (isOther() && topicText().length < 3) { showMsg('يرجى كتابة الموضوع أو السؤال الذي تود مناقشته.'); $('topicOther').focus(); return; }
+    if (isOther() && topicValue().length < 3) { showMsg('يرجى كتابة الموضوع أو السؤال الذي تود مناقشته.'); $('topicOther').focus(); return; }
     if (state.mode === 'office' && !$('building').value.trim()) { showMsg('يرجى إدخال رقم المبنى.'); $('building').focus(); return; }
     if (state.mode === 'office' && !$('office').value.trim()) { showMsg('يرجى إدخال رقم المكتب.'); $('office').focus(); return; }
     if (!$('name').value.trim()) { showMsg('يرجى إدخال الاسم.'); $('name').focus(); return; }
@@ -420,12 +663,10 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     if (!$('dept').value) { showMsg('يرجى اختيار الإدارة.'); $('dept').focus(); return; }
     state.busy = true; renderSummary();
     call('book', { date: state.date, time: state.time, mode: state.mode, name: $('name').value,
-      topic: isOther() ? '' : $('topic2').value, topicOther: isOther(), customTopic: isOther() ? topicText() : '',
+      topic: isOther() ? '' : $('topic2').value, topicOther: isOther(), customTopic: isOther() ? topicValue() : '', lang: EN() ? 'en' : 'ar',
       building: state.mode === 'office' ? $('building').value.trim() : '', office: state.mode === 'office' ? $('office').value.trim() : '', email: $('email').value.trim(), department: $('dept').value, extension: $('ext').value, notes: $('notes').value })
       .then(function (b) {
-        var dl = $('doneDl'); dl.innerHTML = '';
-        [['رقم الحجز', b.id], ['الموضوع', b.topic || topicText()], ['التاريخ', longDate(b.date)], ['الوقت', 'من ' + b.time + ' إلى ' + b.endTime], ['الحضور', b.modeLabel + (b.mode === 'office' && b.where ? ' · ' + b.where : '')]]
-          .forEach(function (r) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); });
+        lastDone = b; renderDone();
         state.booked = true;
         $('form').hidden = true; $('done').hidden = false;
         $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -438,7 +679,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     if (state.busy) return;
     state.busy = true;
     call('cancelBooking', b.id).then(function (res) {
-      state.days = res.days; renderMine(res.myBookings); state.busy = false; renderAll();
+      state.days = res.days; lastMine = res.myBookings || []; renderMine(lastMine); state.busy = false; renderAll();
       if (!$('form').hidden) showMsg('تم إلغاء الحجز.', 'info');
     }).catch(function (e) { state.busy = false; showMsg(errText(e)); renderSummary(); });
   }
@@ -447,9 +688,10 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
       $('who').textContent = d.email;
       $('ver').textContent = 'v' + d.version;
       $('mins').textContent = d.sessionMinutes;
-      fillTopics(d.topics || []);
+      topicsEn = d.topicsEn || {}; lastTopics = d.topics || [];
+      fillTopics(lastTopics);
       if (d.isAdmin && d.adminUrl) { var al = $('adminLink'); al.href = d.adminUrl; al.hidden = false; }
-      if (d.onsiteLocation) $('onsiteText').textContent = d.onsiteLocation;
+      onsite = { ar: d.onsiteLocation || '', en: d.onsiteLocationEn || '' }; setOnsite();
       if (!$('name').value) $('name').value = guessName(d.email);
       if (d.email && !$('email').value) { $('email').value = d.email; $('email').readOnly = true; $('emailHint').hidden = false; }
       state.days = d.days || [];
@@ -457,7 +699,7 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
         var first = state.days.filter(function (x) { return x.times.some(function (t) { return t.remaining > 0; }); })[0];
         state.date = first ? first.date : null; state.time = null;
       }
-      renderMine(d.myBookings);
+      lastMine = d.myBookings || []; renderMine(lastMine);
       $('loading').hidden = true;
       if ($('done').hidden) $('form').hidden = false;
       renderAll();
@@ -482,11 +724,33 @@ footer .in{max-width:1000px;margin:0 auto;padding:18px 16px;display:flex;justify
     var sel = $('topic2'), cur = sel.value;
     while (sel.options.length > 1) sel.remove(1);
     list = list.map(function (t) { return String(t).replace(/[\s\u00A0]+/g, ' ').trim(); });
-    list.forEach(function (t) { sel.appendChild(el('option', { value: t, text: t })); });
+    list.forEach(function (t) { sel.appendChild(el('option', { value: t, text: tName(t) })); });
     sel.appendChild(el('option', { value: OTHER, text: '✎ موضوع آخر أو سؤال تود مناقشته…' }));
     if (list.indexOf(cur) !== -1 || cur === OTHER) sel.value = cur; else if (list.length === 1) sel.value = list[0];
     syncTopicOther();
   }
+  var lastDone = null;
+  function renderDone() {
+    var b = lastDone; if (!b) return;
+    var dl = $('doneDl'); dl.innerHTML = '';
+    [['رقم الحجز', b.id], ['الموضوع', b.topic ? tName(b.topic) : topicText()], ['التاريخ', longDate(b.date)], ['الوقت', 'من ' + b.time + ' إلى ' + b.endTime], ['الحضور', b.modeLabel + (b.mode === 'office' && b.where ? ' · ' + b.where : '')]]
+      .forEach(function (r) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); });
+  }
+  function setOnsite() {
+    var v = EN() ? (onsite.en || onsite.ar) : onsite.ar;
+    if (v) $('onsiteText').textContent = v;
+  }
+  /* language switched: rebuild what the code wrote (topic names, location, summary) */
+  if (window.CWI) CWI.onChange(function (what) {
+    if (what !== 'lang') return;
+    fillTopics(lastTopics); setOnsite(); renderMine(lastMine); renderDone(); renderAll();
+  });
+  /* ?lang= / ?theme= passed from the sign-in page (Apps Script hides them from location.search) */
+  if (hasGas && google.script.url) google.script.url.getLocation(function (l) {
+    var p = (l && l.parameter) || {};
+    if ((p.lang === 'en' || p.lang === 'ar') && p.lang !== CWI.lang) CWI.setLang(p.lang);
+    if ((p.theme === 'dark' || p.theme === 'light') && p.theme !== CWI.theme) CWI.setTheme(p.theme);
+  });
   function syncTopicOther() { var o = isOther(); $('topicOtherBox').hidden = !o; $('topicOther').required = o; }
   function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 

@@ -1,4 +1,4 @@
-# Coffee with IT · v3.5
+# Coffee with IT · v3.6
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -24,6 +24,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo (v3.0)**: `cwit-logo.png` (full bilingual logo, transparent), `cwit-logo-white.png` (on a white card, for dark backgrounds), `cwit-mark.png` (cup only, transparent), `cwit-badge.png` (cup on a white tile — e-mails), `cwit-favicon.png` / `cwit-icon.png` (app icon) |
 | Shared styles | Tech background linked from the **SRU Brand Kit**: `https://ictsru.github.io/brand/css/sru-tech-bg.css` |
 | `posters/ar`, `posters/en` | Awareness posters (PNG + PDF), Arabic v3.0 / English v3.0, with the Coffee with IT logo |
+| `i18n/` | Language + theme layer source: `runtime.js` (detection, toggles, live translation), `theme.css` (light/dark tokens), `en.py` (Arabic → English dictionary), `build.py` (re-injects both into the four pages — run `python3 build.py` inside `i18n/` after editing) |
 | `CHANGELOG.md`, `.nojekyll` | Change record; serve files as-is |
 
 ## Google Sheet
@@ -39,7 +40,11 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v3.5
+## Updating the live app to v3.6
+
+**From v3.5 → v3.6:** replace **Code.gs**, **Index.html**, **Rate.html**, **Admin.html**, deploy a new version, and upload `index.html` to the `coffee` repository.
+The Bookings column `Lang` and the Topics column `TopicEn` are added automatically.
+Optional: add a Settings row `OnsiteLocationEn` with the English location text, and English names for existing topics (dashboard › «✎ الاسم الإنجليزي»).
 
 **From v3.4 → v3.5:** publish **ICTSRU/brand** first (see the SRU Brand Kit package), then replace **Code.gs**, **Index.html**, **Rate.html**, **Admin.html**, deploy a new version, and upload `index.html` to the `coffee` repository.
 
