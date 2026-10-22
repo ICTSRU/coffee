@@ -1,5 +1,33 @@
 # Changelog — Coffee with IT
 
+## v3.5 — 2026-10-22
+- **Tech background now comes from the shared SRU Brand Kit** (`https://ictsru.github.io/brand/css/sru-tech-bg.css`) instead of a copy inside
+  each page: header bands carry the class `sru-tech-bg`, footers `sru-tech-bg-dark`. One update to the kit restyles this platform and every other one.
+- If the kit cannot be reached, the pages fall back to their original solid purple — nothing breaks.
+- `assets/sru-tech-bg.css` removed from this repository (it now lives in ICTSRU/brand).
+
+## v3.4 — 2026-10-22
+- **New tech background (approved option C «شبكة متصلة متحركة»)** on the purple header band and the footer of every page
+  (booking, rating, admin dashboard, GitHub sign-in page): network nodes and lines drifting slowly over a purple → blue gradient.
+  Motion stops for users with "reduce motion"; the pattern is removed in the printed admin report.
+- **Smaller logos**: SRU and ICTD logos in the white bar 40 px (was 56/52/50 px); Coffee with IT mark 60 px on the booking and rating pages
+  (was 76 px), 50 px on the admin dashboard (was 58 px), 56 px on the sign-in page (was 64 px).
+- **New reusable file `assets/sru-tech-bg.css`** — the same pattern as a standalone stylesheet for any ICTD/ITOC project
+  (classes `sru-tech-bg` for header bands, `sru-tech-bg-dark` for footers).
+- Sign-in page version label corrected (showed v1.9).
+
+## v3.3 — 2026-10-22
+- **New attendance mode «في مكتبك»** (حضوري — يزورك فريق تقنية المعلومات في مكتبك), next to «حضوري» and «عن بُعد عبر Zoom».
+  Choosing it opens two required fields: **رقم المبنى** and **رقم المكتب**. The location («مبنى 1 — مكتب 2122») is saved in the new
+  Bookings column `Location`, used as the calendar-invitation location, and shown in the confirmation and reminder e-mails («مكان الجلسة — في مكتبك»)
+  with its own checklist. Stored mode label: «حضوري — في مكتبك».
+- **Session topic**: larger font in the drop-down (17 px, bold), and a new last option **«✎ موضوع آخر أو سؤال تود مناقشته…»**
+  that opens a required text box (up to 200 characters). The typed text becomes the booking topic; new column `TopicOther` = TRUE marks it.
+  The optional notes field is renamed «ملاحظات إضافية (اختياري)» to avoid repeating the same question.
+- **Admin dashboard**: mode filter and attendance-mode chart now have three parts (مقر تقنية المعلومات / مكتب الموظف / Zoom); the bookings log shows
+  «في المكتب» with the building and office number; typed topics carry a «موضوع مقترح» badge, are grouped as «موضوع آخر (مقترح من الموظف)»
+  in the topic chart and filter; CSV adds «نوع الموضوع» and «مكان الجلسة (المكتب)».
+
 ## v3.2 — 2026-10-22
 - **Minutes instead of hours** in the admin dashboard: top KPI «إجمالي دقائق الجلسات», presenters KPI «إجمالي الدقائق»,
   per-presenter table column «إجمالي الدقائق» (the hours and h/min columns were removed) and the bar chart «إجمالي الدقائق لكل مقدم».

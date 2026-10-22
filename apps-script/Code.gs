@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v3.2
+ * Coffee with IT — Booking System  ·  v3.5
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.5';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings',
   PRESENTERS: 'Presenters', ADMINS: 'Admins' };
@@ -15,10 +15,25 @@ const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIG
 const BOOKING_HEADERS = ['BookingId', 'Timestamp', 'Email', 'Name', 'Department', 'Extension',
   'Date', 'Time', 'Mode', 'Notes', 'Status', 'CalendarEventId', 'CancelledAt', 'ReminderSent', 'Attendance', 'Topic', 'ThanksSentAt',
   // v3.1 — filled by admins after the session
-  'Presenter', 'AdminNotes', 'DurationMin'];
+  'Presenter', 'AdminNotes', 'DurationMin',
+  // v3.3 — office visit location, and «موضوع آخر» typed by the attendee
+  'Location', 'TopicOther'];
 const COL = BOOKING_HEADERS.reduce((o, h, i) => (o[h] = i, o), {});
 
-const MODE_LABEL = { onsite: 'حضوري', zoom: 'عن بُعد (Zoom)' };
+const MODE_LABEL = { onsite: 'حضوري', office: 'حضوري — في مكتبك', zoom: 'عن بُعد (Zoom)' };
+/** Mode key from the label stored in the Bookings sheet. */
+function modeKey_(label) {
+  if (label === MODE_LABEL.zoom) return 'zoom';
+  if (label === MODE_LABEL.office) return 'office';
+  return 'onsite';
+}
+/** Where the session takes place, for a stored booking row. */
+function whereOf_(row, s) {
+  const m = modeKey_(row[COL.Mode]);
+  if (m === 'zoom') return zoomLink_(s);
+  if (m === 'office') return row[COL.Location] || '';
+  return String(s.OnsiteLocation || '');
+}
 // Zoom meeting used for remote sessions when Settings › ZoomLink is empty or not a valid link.
 const DEFAULT_ZOOM_LINK = 'https://us06web.zoom.us/j/81335191824?pwd=Va9wQ6Yyz0NPaOjubMJBaxhqcUd7AR.1';
 const DEFAULT_ADMINS = ['m.elmahdy@sr.edu.sa'];   // system owner(s): always admins, the only ones who can manage admin access
@@ -121,18 +136,29 @@ function book(payload) {
   const notes = clean_(p.notes, 300);
   // Compare normalised text: extra/trailing spaces, non-breaking or invisible characters in the Topics sheet
   // (or in the browser value) must not reject a topic the user picked from the list.
-  const activeTopics = topicRows_().filter(t => t.active).map(t => t.name);
-  const wanted = topicKey_(clean_(p.topic, 300));
-  const topic = activeTopics.filter(t => topicKey_(t) === wanted)[0] || norm_(clean_(p.topic, 150));
-  if (activeTopics.length && activeTopics.map(topicKey_).indexOf(wanted) === -1)
-    throw new Error('الموضوع المختار لم يعد متاحًا — حدّث الصفحة واختر موضوعًا من القائمة.');
-  const mode = p.mode === 'zoom' ? 'zoom' : (p.mode === 'onsite' ? 'onsite' : '');
+  const topicOther = p.topicOther === true || p.topicOther === 'true';
+  let topic;
+  if (topicOther) {
+    // «موضوع آخر أو سؤال تود مناقشته» — free text typed by the attendee
+    topic = norm_(clean_(p.customTopic, 200));
+    if (topic.length < 3) throw new Error('اكتب الموضوع أو السؤال الذي تود مناقشته.');
+  } else {
+    const activeTopics = topicRows_().filter(t => t.active).map(t => t.name);
+    const wanted = topicKey_(clean_(p.topic, 300));
+    topic = activeTopics.filter(t => topicKey_(t) === wanted)[0] || norm_(clean_(p.topic, 150));
+    if (activeTopics.length && activeTopics.map(topicKey_).indexOf(wanted) === -1)
+      throw new Error('الموضوع المختار لم يعد متاحًا — حدّث الصفحة واختر موضوعًا من القائمة.');
+  }
+  const mode = ['zoom', 'onsite', 'office'].indexOf(p.mode) !== -1 ? p.mode : '';
   if (!name || !dept || !mode || !/^\d{4}-\d{2}-\d{2}$/.test(p.date || '') || !/^\d{2}:\d{2}$/.test(p.time || '')) {
     throw new Error('بيانات الحجز غير مكتملة.');
   }
+  const building = clean_(p.building, 30), office = clean_(p.office, 30);
+  if (mode === 'office' && (!building || !office)) throw new Error('أدخل رقم المبنى ورقم المكتب للجلسة الحضورية في مكتبك.');
+  const location = mode === 'office' ? 'مبنى ' + building + ' — مكتب ' + office : '';
 
   const sessionMin = Number(s.SessionMinutes) || 10;
-  const where = mode === 'zoom' ? zoomLink_(s) : String(s.OnsiteLocation || '');
+  const where = mode === 'zoom' ? zoomLink_(s) : (mode === 'office' ? location : String(s.OnsiteLocation || ''));
   let result;
 
   const lock = LockService.getScriptLock();
@@ -173,7 +199,7 @@ function book(payload) {
     }
 
     const row = [id, Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss'), email, name, dept, ext,
-      p.date, p.time, MODE_LABEL[mode], notes, 'Confirmed', eventId, '', '', '', topic];
+      p.date, p.time, MODE_LABEL[mode], notes, 'Confirmed', eventId, '', '', '', topic, '', '', '', '', location, topicOther ? 'TRUE' : ''];
     ensureBookingHeaders_();
     const sh = sheet_(SHEETS.BOOKINGS);
     sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
@@ -224,7 +250,8 @@ function getAdminData() {
   const bookings = rows.map(r => ({
     id: r[COL.BookingId], timestamp: r[COL.Timestamp], email: r[COL.Email], name: r[COL.Name],
     department: r[COL.Department], extension: r[COL.Extension], date: r[COL.Date], time: r[COL.Time],
-    mode: r[COL.Mode] === MODE_LABEL.zoom ? 'zoom' : 'onsite', modeLabel: r[COL.Mode], notes: r[COL.Notes],
+    mode: modeKey_(r[COL.Mode]), modeLabel: r[COL.Mode], notes: r[COL.Notes],
+    location: r[COL.Location] || '', topicOther: String(r[COL.TopicOther]).toUpperCase() === 'TRUE',
     status: r[COL.Status], cancelledAt: r[COL.CancelledAt], attendance: r[COL.Attendance] || '',
     topic: r[COL.Topic] || '', thanksSentAt: r[COL.ThanksSentAt] || '',
     presenter: r[COL.Presenter] || '', adminNotes: r[COL.AdminNotes] || '', durationMin: Number(r[COL.DurationMin]) || 0,
@@ -921,10 +948,9 @@ function sendCancellation_(email, r, s) {
 }
 
 function sendReminderMail_(r, s) {
-  const zoom = r[COL.Mode] === MODE_LABEL.zoom;
   const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], name: r[COL.Name], topic: r[COL.Topic] || '',
-    mode: zoom ? 'zoom' : 'onsite', modeLabel: r[COL.Mode],
-    where: zoom ? zoomLink_(s) : String(s.OnsiteLocation || ''),
+    mode: modeKey_(r[COL.Mode]), modeLabel: r[COL.Mode],
+    where: whereOf_(r, s),
     endTime: addMinutes_(r[COL.Time], Number(s.SessionMinutes) || 10) };
   send_(r[COL.Email], 'تذكير: جلسة Coffee with IT اليوم الساعة ' + b.time, reminderHtml_(b, s), s);
 }
@@ -956,7 +982,9 @@ function confirmationHtml_(b, s) {
     sectionTitle_('قبل الجلسة') +
     checklist_(zoom
       ? ['تأكد من تثبيت تطبيق Zoom وتجربة الصوت والصورة مسبقًا.', 'ادخل إلى الاجتماع من الرابط أعلاه قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.']
-      : ['نرجو الحضور قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.']) +
+      : (b.mode === 'office'
+        ? ['سيزورك أحد أعضاء فريق تقنية المعلومات في مكتبك في الموعد المحدد.', 'جهّز جهازك وأسئلتك أو الحالات التي تودّ مناقشتها.']
+        : ['نرجو الحضور قبل الموعد بدقيقتين.', 'جهّز أسئلتك أو الحالات التي تودّ مناقشتها.'])) +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;border-top:1px solid ' + C.line + '"><tr>' +
       '<td style="padding-top:18px;font-size:14px;color:' + C.muted + '">تغيّرت ظروفك؟ يمكنك إدارة الحجز أو إلغاؤه ليُتاح الموعد لزملائك.</td></tr>' +
       '<tr><td style="padding-top:10px">' + button_('إدارة الحجز', SITE_URL, C.purple) + '</td></tr></table>';
@@ -1136,7 +1164,7 @@ function whereBlock_(b) {
       '</div>';
   }
   return '<div style="background:' + C.light + ';border-radius:6px;padding:16px 18px;margin:4px 0 6px">' +
-    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">مكان الجلسة</div>' +
+    '<div style="font-weight:bold;color:' + C.dark + ';margin-bottom:4px">' + (b.mode === 'office' ? 'مكان الجلسة — في مكتبك' : 'مكان الجلسة') + '</div>' +
     '<div>' + esc_(b.where || '') + '</div></div>';
 }
 

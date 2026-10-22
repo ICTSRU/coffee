@@ -1,4 +1,4 @@
-# Coffee with IT · v3.2
+# Coffee with IT · v3.5
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -22,6 +22,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, **session details (presenter / actual duration / notes)**, **presenters dashboard**, **presenter list**, **admin access management**, CSV export, printable PDF report |
 | `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
 | `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo (v3.0)**: `cwit-logo.png` (full bilingual logo, transparent), `cwit-logo-white.png` (on a white card, for dark backgrounds), `cwit-mark.png` (cup only, transparent), `cwit-badge.png` (cup on a white tile — e-mails), `cwit-favicon.png` / `cwit-icon.png` (app icon) |
+| Shared styles | Tech background linked from the **SRU Brand Kit**: `https://ictsru.github.io/brand/css/sru-tech-bg.css` |
 | `posters/ar`, `posters/en` | Awareness posters (PNG + PDF), Arabic v3.0 / English v3.0, with the Coffee with IT logo |
 | `CHANGELOG.md`, `.nojekyll` | Change record; serve files as-is |
 
@@ -31,14 +32,20 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 |---|---|
 | Settings | `MailFrom` (sender of every e-mail; default itoc@sr.edu.sa), session length, hours, location, Zoom link, `NotifyEmail` (BCC copy; defaults to servicedesk@sr.edu.sa + m.elmahdy@sr.edu.sa; separate addresses with `;`), `AdminEmails` |
 | Slots | One row per slot; set `Active` to `FALSE` to close it |
-| Bookings | Adds the **Attendance**, **Topic** and (v3.1) **Presenter**, **AdminNotes**, **DurationMin** columns automatically on first use |
+| Bookings | Adds the **Attendance**, **Topic** and (v3.1) **Presenter**, **AdminNotes**, **DurationMin** and (v3.3) **Location**, **TopicOther** columns automatically on first use |
 | Topics | **Created automatically.** Manage it from the admin dashboard (add / enable / disable) |
 | Presenters | **v3.1 — created automatically**, pre-filled from the ITOC Team Directory v1.0 (14 names). Name, Email, Active, CreatedAt, CreatedBy. Managed from the dashboard (add / enable / disable); active names feed the presenter drop-down |
 | Admins | **v3.1 — created automatically** (carries over any address in Settings › AdminEmails). Email, Name, Active, AddedAt, AddedBy. Only the system owner (m.elmahdy@sr.edu.sa) can grant, suspend or remove access from the dashboard |
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v3.2
+## Updating the live app to v3.5
+
+**From v3.4 → v3.5:** publish **ICTSRU/brand** first (see the SRU Brand Kit package), then replace **Code.gs**, **Index.html**, **Rate.html**, **Admin.html**, deploy a new version, and upload `index.html` to the `coffee` repository.
+
+**From v3.3 → v3.4:** replace **Code.gs**, **Index.html**, **Rate.html** and **Admin.html**, deploy a new version, and upload `index.html` + `assets/sru-tech-bg.css` to the `coffee` repository. No sheet changes.
+
+**From v3.2 → v3.3:** replace **Code.gs**, **Index.html** and **Admin.html**, then deploy a new version. The Bookings columns `Location` and `TopicOther` are added automatically.
 
 **From v3.1 → v3.2:** replace **Admin.html** and **Code.gs** (version number only), then deploy a new version. No sheet changes.
 
