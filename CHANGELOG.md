@@ -1,5 +1,30 @@
 # Changelog — Coffee with IT
 
+## v3.1 — 2026-10-22
+- **Session details in the bookings log (admin).** New «✎ تسجيل التفاصيل» action on every confirmed booking opens a dialog with:
+  - **مقدم الجلسة** — chosen from a drop-down (Presenters list only),
+  - **الوقت المستغرق** — actual duration in minutes (1–240, quick buttons 10/5/15/20/30),
+  - **ملاحظات الجلسة** — admin notes (up to 500 characters).
+  Saved in the new Bookings columns `Presenter`, `AdminNotes`, `DurationMin`. The table shows three new columns; the attendee's own notes column is renamed «ملاحظات الموظف».
+- **Presenters dashboard** (follows all filters): number of presenters, sessions delivered, total hours, average duration, and a per-presenter table
+  (sessions, total time, total hours, average duration, average rating) with a totals row and an hours bar chart. Sessions marked «لم يحضر» are not counted.
+  New KPI «إجمالي ساعات الجلسات» in the top row; new filter «مقدم الجلسة» (including «غير محدد»).
+- **Presenter list management**: new sheet `Presenters`, pre-filled from the ITOC Team Directory v1.0; add from a team drop-down or type an outside name; enable / disable.
+- **Admin access management from the dashboard**: new sheet `Admins`. The owner (m.elmahdy@sr.edu.sa) grants access by picking a team member
+  (drop-down) or typing an @sr.edu.sa address, and can suspend, restore or remove it. Other admins see the list read-only. The owner can never be removed.
+  Addresses already in Settings › AdminEmails are carried over automatically (the setting still works; a suspended address stays blocked).
+- CSV export and the printed report include presenter, duration and session notes.
+
+## v3.0 — 2026-10-20
+- **Outlook for Windows: logos now appear without "Click here to download pictures".** The SRU, ICTD, Coffee with IT and ITOC
+  logos are embedded in every e-mail (inline `cid:` images, about 15 KB) instead of being linked from GitHub; Gmail shows them too.
+- **No more white vertical lines in the purple header in Outlook**: the header is one full-width table and every cell carries a
+  `bgcolor` attribute (Outlook ignores CSS backgrounds on nested tables); the "Coffee with IT · 10 min" label is a table cell, not an inline-block.
+- **"Coffee with IT" no longer reversed to "IT with Coffee" in Outlook**: Latin names (Coffee with IT, Read AI, …) are wrapped in
+  `dir="ltr"` spans inside Arabic text.
+- Time reads «من 10:30 إلى 10:40» with normal spaces (Outlook dropped the space before the second time).
+- Reminder e-mail: Latin words in the topic get the same treatment.
+
 ## v2.9 — 2026-10-20
 - **New Coffee with IT logo everywhere** (cup with digital steam and circuit lines, «Coffee with IT · قهوة مع تقنية المعلومات»).
   - Pages: booking page, rating page, admin dashboard and the GitHub landing page show the new cup on a white rounded tile

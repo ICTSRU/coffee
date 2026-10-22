@@ -59,7 +59,7 @@ main.wrap{padding-top:18px;padding-bottom:40px}
 .legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:5px;vertical-align:middle}
 .empty{color:var(--muted);font-size:14px;padding:8px 0}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
-table.t{width:100%;border-collapse:collapse;font-size:13.5px;min-width:1040px}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;min-width:1360px}
 table.t th{background:var(--purple-light);color:var(--purple-dark);text-align:right;padding:9px 10px;font-weight:800;white-space:nowrap;position:sticky;top:0}
 table.t td{padding:8px 10px;border-top:1px solid var(--border);vertical-align:middle}
 table.t tr:hover td{background:#fbfaff}
@@ -102,6 +102,35 @@ table.t tr:hover td{background:#fbfaff}
 .topic.off .nm{color:var(--muted);text-decoration:line-through}
 .addt{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .addt input{flex:1;min-width:220px;min-height:40px;border:1px solid rgba(80,30,140,.25);border-radius:var(--radius);padding:6px 10px}
+.pkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.pkpis .kpi{background:var(--blue-light);border:0}
+table.t.sm{min-width:640px}
+.num{text-align:center;font-variant-numeric:tabular-nums}
+.lnk3{background:none;border:0;color:var(--blue);font-weight:700;cursor:pointer;font-size:12.5px;padding:4px 6px;white-space:nowrap}
+.pres{font-weight:700;color:var(--purple-dark)}
+.pgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:1100px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+table.t.sm td.pres{white-space:nowrap}
+.att button{white-space:nowrap}
+.subnote{font-size:12px;color:var(--muted);margin:8px 0 0}
+.mgr{display:flex;flex-direction:column;gap:8px}
+.mgr .row{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;flex-wrap:wrap}
+.mgr .row .nm{flex:1;min-width:180px;font-weight:700}
+.mgr .row.off .nm{color:var(--muted);text-decoration:line-through}
+.mgr .row .em{direction:ltr;unicode-bidi:isolate;font-size:12.5px;color:var(--muted)}
+.addt select{flex:1;min-width:220px;min-height:40px;border:1px solid rgba(80,30,140,.25);border-radius:var(--radius);padding:6px 10px;background:#fff}
+.p-own{background:var(--purple);color:#fff}
+.ro{background:var(--amber-light);color:var(--amber);border-radius:var(--radius);padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:10px}
+dialog.dlg{border:0;border-radius:6px;padding:0;width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(36,20,54,.3);color:var(--ink)}
+dialog.dlg::backdrop{background:rgba(36,20,54,.45)}
+.dlg .dh{background:var(--purple);color:#fff;padding:14px 18px;font-weight:800;font-size:16px}
+.dlg .dh small{display:block;font-weight:600;opacity:.85;font-size:12.5px}
+.dlg .db{padding:16px 18px;display:grid;gap:12px}
+.dlg .db .f textarea{width:100%;min-height:96px;border:1px solid rgba(80,30,140,.25);border-radius:var(--radius);padding:8px 10px;font:inherit;resize:vertical}
+.dlg .df{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}
+.dlg .hint{font-size:12px;color:var(--muted);margin-top:3px}
+.durq{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.durq button{border:1px solid var(--border);background:#fff;border-radius:999px;padding:2px 12px;font-size:12.5px;font-weight:700;cursor:pointer;min-height:30px}
 footer{background:var(--purple-dark);color:#fff;margin-top:8px}
 footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .support{direction:ltr;background:#fff;color:var(--purple-dark);border-radius:var(--radius);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
@@ -120,7 +149,9 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   .hero::after{display:none}
   .hero .wrap{padding:6px 0}
   .brand img{height:40px}
-  .kpis{grid-template-columns:repeat(6,1fr);gap:6px}
+  .kpis{grid-template-columns:repeat(7,1fr);gap:6px}
+  .pkpis{grid-template-columns:repeat(4,1fr)}
+  .pgrid{grid-template-columns:3fr 2fr}
   .kpi{padding:6px 8px}.kpi .v{font-size:18px}
   .card{border:1px solid #ddd;padding:8px 10px;break-inside:avoid}
   .tbl-wrap{overflow:visible;border:0}
@@ -142,7 +173,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
     <span style="line-height:0;flex:0 0 auto"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAMAAAC8EZcfAAABgFBMVEX+/v4AAABQmNdSJXaIh4dIGG3o6OxELCbsSSU4iM5KMy3U5fRrp9zMx88yGhSWlZSKuuQ8JiG4trbR2eq21O6pp6Y7IhzY2NinyumTd6psR4tCjdBboNt5V5SZw+e2psbrQhzi2+ibhrJiOYPGuNHrOxQoKChGRkZnZ2dcM3x8fHyjmJZxreCGeHSMjIy2trbIyMhqWFR5seGCZJyji7buVzf119E6CmScnJzzhm4qesSqlLuvm8FbR0J3Z2YYGBhXV1eJaqHT09PxdlliTEd8sN7XzuFXQj2GtN/Cu7rwaEz5t6lADmf0k332ppUwN4d7Y5iioqL5xrsiCQNAJB1aMYJZR3JzYl5jndSAXpqOmMOqoJ27s8jHwL71mIT6zMLz4Nwfcrs5CF41FG02Mns8RZdXbbRRc69uir2Qgn+Vk7o0JnM+VZ00WaItZbY/cK0+kNheUHZAXLBgOH5hTnh9isOAb2ykv+C+wNrAr83ye2AAAAAAAAAAAAAAAAAAAADlnvRYAAAAgHRSTlP+AP/////8/////////////////////////////////////////yhGZ///////jLbI/////////5z///////8YV//T//////////////////+i//////////////////////////////////////////////////////8AAAAAANOMTEkAAAvcSURBVHja1Z2He5rsFsApyGtYgiIyXHElMWoSE9O0zWjTZjT9Or7Rvb697973/vX3HSDgRIVIz/Pkeaq1+vPsc6BvqBtjZe3e1s4OFbns7GzdWxtPQY15fv3Wfeoa5f6t9VkA17YAde0CttYCAq5vU0uS7fUAgGu3qCXKrbVpgBvUkmVjIuDdbWrpsn13POA6oGIgYH0c4AYVE9kYDRgbPh8hFUc+LyEVSz4PoQO4TsVM1v2Ad0HcAMFdH+A2FTvZ9gJuUDGUDRdwjYqlrPUBv4gn4BcOYOgRnA0xkqkoIgTsqqHFCRWJBwq0EZYXQsCtCNwnSythvM0WBowkR7f/0g7DVxBgNEUuS9PtUMKEuhHRDFKgw7DyLQgY0fxbogshRMr9G1RUVQTamKaFxeOYuhcRoEBDFS5u5HvUVkSAgA5FhVtUZOsh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" alt="Coffee with IT — قهوة مع تقنية المعلومات" width="58" height="58" style="display:block;width:58px;height:58px;border-radius:13px"></span>
     <div>
     <h1>لوحة إدارة حجوزات <span class="en">Coffee with IT</span></h1>
-    <p><span id="adminWho">…</span> · <span class="en" id="ver">v2.9</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
+    <p><span id="adminWho">…</span> · <span class="en" id="ver">v3.1</span> · آخر تحديث: <span class="en" id="gen">—</span></p>
     </div>
   </div>
   <div class="acts">
@@ -171,7 +202,8 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         <div class="f"><label for="fAtt">الحضور الفعلي</label><select id="fAtt"><option value="">الكل</option><option value="Attended">حضر</option><option value="No-show">لم يحضر</option><option value="none">غير مسجّل</option></select></div>
         <div class="f"><label for="fDept">الإدارة</label><select id="fDept"><option value="">كل الإدارات</option></select></div>
         <div class="f"><label for="fTopic">الموضوع</label><select id="fTopic"><option value="">كل المواضيع</option></select></div>
-        <div class="f" style="grid-column:span 2"><label for="fQ">بحث (الاسم، البريد، رقم الحجز، الملاحظات)</label><input type="search" id="fQ" placeholder="ابحث…"></div>
+        <div class="f"><label for="fPresenter">مقدم الجلسة</label><select id="fPresenter"><option value="">كل المقدمين</option><option value="none">غير محدد</option></select></div>
+        <div class="f" style="grid-column:span 2"><label for="fQ">بحث (الاسم، البريد، رقم الحجز، المقدم، الملاحظات)</label><input type="search" id="fQ" placeholder="ابحث…"></div>
       </div>
       <div class="quick">
         <span class="count">فترة سريعة:</span>
@@ -185,6 +217,21 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         <button type="button" class="btn btn-secondary" id="csv">⬇ تصدير Excel (CSV)</button>
         <button type="button" class="btn btn-primary" id="print">🖨 طباعة التقرير / PDF</button>
       </div>
+    </section>
+
+    <section class="card" aria-label="مقدمو الجلسات">
+      <h2>مقدمو الجلسات <span class="count">(حسب الفلاتر المحددة — تُحتسب الجلسات المؤكدة المسند لها مقدم، ولا يُحتسب «لم يحضر»)</span></h2>
+      <div class="pkpis" id="pKpis"></div>
+      <div class="pgrid">
+        <div class="tbl-wrap">
+          <table class="t sm">
+            <thead><tr><th>مقدم الجلسة</th><th class="num">عدد الجلسات</th><th class="num">إجمالي الوقت</th><th class="num">إجمالي الساعات</th><th class="num">متوسط المدة</th><th class="num">متوسط التقييم</th></tr></thead>
+            <tbody id="pRows"></tbody>
+          </table>
+        </div>
+        <div><h2 style="font-size:15px">إجمالي الساعات لكل مقدم</h2><div class="bars" id="pHours"></div></div>
+      </div>
+      <p class="subnote" id="pNote"></p>
     </section>
 
     <section class="card" aria-label="تقييم الجلسات">
@@ -214,6 +261,32 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       </form>
     </section>
 
+    <div class="grid2 no-print">
+      <section class="card" aria-label="قائمة مقدمي الجلسات">
+        <h2>قائمة مقدمي الجلسات <span class="count">(تظهر الأسماء المفعّلة في القائمة المنسدلة عند تسجيل تفاصيل الجلسة)</span></h2>
+        <div class="mgr" id="presenters"></div>
+        <form class="addt" id="addPresenterForm">
+          <label for="newPresenter" class="count" style="align-self:center">إضافة:</label>
+          <select id="newPresenter"></select>
+          <input id="newPresenterOther" maxlength="80" placeholder="اكتب الاسم" hidden>
+          <button type="submit" class="btn btn-primary">+ إضافة</button>
+        </form>
+      </section>
+
+      <section class="card" aria-label="صلاحيات لوحة الإدارة">
+        <h2>صلاحيات الدخول على لوحة الإدارة</h2>
+        <div class="ro" id="adminsRO" hidden>إدارة الصلاحيات متاحة لمالك النظام فقط — القائمة للعرض.</div>
+        <div class="mgr" id="admins"></div>
+        <form class="addt" id="addAdminForm">
+          <label for="newAdmin" class="count" style="align-self:center">منح صلاحية:</label>
+          <select id="newAdmin"></select>
+          <input id="newAdminEmail" type="email" maxlength="120" placeholder="name@sr.edu.sa" dir="ltr" hidden>
+          <button type="submit" class="btn btn-primary">+ منح الصلاحية</button>
+        </form>
+        <p class="subnote">مالك النظام لديه الصلاحية دائمًا ولا يمكن إيقافه. أي حساب آخر يُمنح أو يُوقف من هنا مباشرة دون تعديل الكود.</p>
+      </section>
+    </div>
+
     <div class="grid2">
       <section class="card"><h2>الحجوزات حسب الموضوع</h2><div class="bars" id="byTopic"></div></section>
       <section class="card"><h2>الحجوزات حسب الإدارة</h2><div class="bars" id="byDept"></div></section>
@@ -232,7 +305,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         <table class="t">
           <thead><tr>
             <th>رقم الحجز</th><th>التاريخ</th><th>الوقت</th><th>الاسم</th><th>البريد</th><th>الإدارة</th><th>الموضوع</th><th>التحويلة</th>
-            <th>الحضور</th><th>الحالة</th><th>الحضور الفعلي</th><th>التقييم</th><th>ملاحظات</th><th class="act-col">إجراء</th>
+            <th>الحضور</th><th>الحالة</th><th>الحضور الفعلي</th><th>مقدم الجلسة</th><th class="num">الوقت المستغرق</th><th>ملاحظات الجلسة</th><th>التقييم</th><th>ملاحظات الموظف</th><th class="act-col">إجراء</th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
@@ -241,6 +314,24 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
     </section>
   </div>
 </main>
+
+<dialog class="dlg" id="dlg" aria-labelledby="dlgTitle">
+  <form method="dialog" id="dlgForm">
+    <div class="dh" id="dlgTitle">تفاصيل الجلسة<small id="dlgSub"></small></div>
+    <div class="db">
+      <div class="f"><label for="dPresenter">مقدم الجلسة</label><select id="dPresenter"></select></div>
+      <div class="f"><label for="dDur">الوقت المستغرق (بالدقائق)</label><input type="number" id="dDur" min="1" max="240" step="1" inputmode="numeric" placeholder="مثال: 10">
+        <div class="durq" id="durQuick"></div>
+        <div class="hint">مدة الجلسة المخططة: <span id="dPlanned">10</span> دقائق. اتركه فارغًا إن لم تُعقد الجلسة.</div></div>
+      <div class="f"><label for="dNotes">ملاحظات على الجلسة</label><textarea id="dNotes" maxlength="500" placeholder="ما الذي نوقش، أسئلة الموظف، إجراءات متابعة…"></textarea>
+        <div class="hint"><span id="dCount">0</span> / 500</div></div>
+    </div>
+    <div class="df">
+      <button type="submit" class="btn btn-primary" id="dSave" value="save">حفظ</button>
+      <button type="button" class="btn btn-secondary" id="dCancel">إلغاء</button>
+    </div>
+  </form>
+</dialog>
 
 <footer class="no-print"><div class="wrap">
   <div class="support"><b>For Support:</b> Dial <span class="star" aria-label="star">*</span> <span class="muted">or</span> Send email to: <a href="mailto:servicedesk@sr.edu.sa">servicedesk@sr.edu.sa</a></div>
@@ -292,8 +383,15 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         rating: [5, 4, 5, 3, 4, 5, 2, 5][i % 8], comment: comments[i % 5], at: b.date + ' 14:0' + (i % 9) };
     });
     var auto = false;
-    function pack() { return { ratings: ratings.slice(), automation: auto, autoThanks: true, rate: { labels: ['غير راضٍ إطلاقًا','غير راضٍ','محايد','راضٍ','راضٍ جدًا'] }, admin: 'm.elmahdy@sr.edu.sa', version: '2.9', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#' }; }
+    var team = [{ name: 'Mohamed ElMahdy', email: 'm.elmahdy@sr.edu.sa' }, { name: 'Mohamed Nawaz', email: 'm.nawaz@sr.edu.sa' }, { name: 'Mohamed Omar', email: 'm.omar@sr.edu.sa' },
+      { name: 'Ammar Alrowedan', email: 'a.alrowedan@sr.edu.sa' }, { name: 'Azzam Alaqeel', email: 'a.alaqeel@sr.edu.sa' }, { name: 'Abd Alazez Alawaji', email: 'a.alawaji@sr.edu.sa' }, { name: 'سراج', email: '' }];
+    var presenters = team.slice(0, 6).map(function (t) { return { name: t.name, email: t.email, active: true }; });
+    var admins = [{ email: 'm.elmahdy@sr.edu.sa', name: 'Mohamed ElMahdy', active: true, owner: true }, { email: 'm.omar@sr.edu.sa', name: 'Mohamed Omar', active: true, owner: false }];
+    list.forEach(function (b, i) { if (b.attendance === 'Attended') { b.presenter = presenters[i % 4].name; b.durationMin = [10, 12, 8, 15, 10][i % 5]; b.adminNotes = i % 3 === 0 ? 'تمت مراجعة إعدادات المشاركة مع الموظف.' : ''; } });
+    function copyArr(a) { return a.map(function (x) { return Object.assign({}, x); }); }
+    function pack() { return { ratings: ratings.slice(), automation: auto, autoThanks: true, rate: { labels: ['غير راضٍ إطلاقًا','غير راضٍ','محايد','راضٍ','راضٍ جدًا'] }, admin: 'm.elmahdy@sr.edu.sa', version: '3.1', generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      topic: 'حماية بيانات الاجتماعات عند استخدام Read AI', bookings: list.slice(), topics: topics.map(function (t) { return Object.assign({}, t); }), slots: { total: 80, future: 48, freeFuture: 21 }, signIns: 137, sheetUrl: '#',
+      sessionMinutes: 10, presenters: copyArr(presenters), team: team, admins: copyArr(admins), isOwner: true, owners: ['m.elmahdy@sr.edu.sa'] }; }
     return {
       getAdminData: function () { return Promise.resolve(pack()); },
       setAttendance: function (id, v) { list.forEach(function (b) { if (b.id === id) b.attendance = v; }); return Promise.resolve({ ok: true, id: id, attendance: v }); },
@@ -303,6 +401,12 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       sendPendingThanks: function () { var n = 0; list.forEach(function (b) { if (b.ended && b.status === 'Confirmed' && !b.thanksSentAt && b.attendance !== 'No-show') { b.thanksSentAt = 'now'; n++; } }); var d = pack(); d.sentCount = n; return Promise.resolve(d); },
       sendThanksTest: function () { return Promise.resolve({ ok: true, to: 'm.elmahdy@sr.edu.sa', from: 'itoc@sr.edu.sa' }); },
       enableAutomation: function () { auto = true; return Promise.resolve({ automation: true }); },
+      setSessionDetails: function (id, d) { var r; list.forEach(function (b) { if (b.id === id) { b.presenter = d.presenter; b.adminNotes = d.adminNotes; b.durationMin = Number(d.durationMin) || 0; r = b; } }); return Promise.resolve({ ok: true, id: id, presenter: r.presenter, adminNotes: r.adminNotes, durationMin: r.durationMin }); },
+      addPresenter: function (n, e) { if (presenters.some(function (p) { return p.name === n; })) return Promise.reject(new Error('هذا الاسم موجود في القائمة بالفعل.')); presenters.push({ name: n, email: e || '', active: true }); return Promise.resolve(copyArr(presenters)); },
+      setPresenterActive: function (n, a) { presenters.forEach(function (p) { if (p.name === n) p.active = a; }); return Promise.resolve(copyArr(presenters)); },
+      addAdmin: function (e, n) { if (!/@sr\.edu\.sa$/.test(e)) return Promise.reject(new Error('أدخل بريدًا جامعيًا صحيحًا @sr.edu.sa')); var x = admins.filter(function (a) { return a.email === e; })[0]; if (x) { if (x.active) return Promise.reject(new Error('هذا الحساب لديه صلاحية الدخول بالفعل.')); x.active = true; } else admins.push({ email: e, name: n || '', active: true, owner: false }); return Promise.resolve(copyArr(admins)); },
+      setAdminActive: function (e, a) { admins.forEach(function (x) { if (x.email === e && !x.owner) x.active = a; }); return Promise.resolve(copyArr(admins)); },
+      removeAdmin: function (e) { admins = admins.filter(function (x) { return x.owner || x.email !== e; }); return Promise.resolve(copyArr(admins)); },
       adminCancel: function (id) { list.forEach(function (b) { if (b.id === id) b.status = 'Cancelled'; }); return Promise.resolve(pack()); }
     };
   })();
@@ -340,7 +444,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
     render();
   }
   function filtered() {
-    var f = { topic: $('fTopic').value, from: $('fFrom').value, to: $('fTo').value, st: $('fStatus').value, mode: $('fMode').value, att: $('fAtt').value, dept: $('fDept').value, q: $('fQ').value.trim().toLowerCase() };
+    var f = { pres: $('fPresenter').value, topic: $('fTopic').value, from: $('fFrom').value, to: $('fTo').value, st: $('fStatus').value, mode: $('fMode').value, att: $('fAtt').value, dept: $('fDept').value, q: $('fQ').value.trim().toLowerCase() };
     return data.bookings.filter(function (b) {
       if (f.from && b.date < f.from) return false;
       if (f.to && b.date > f.to) return false;
@@ -350,7 +454,9 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       if (f.att && f.att !== 'none' && b.attendance !== f.att) return false;
       if (f.dept && b.department !== f.dept) return false;
       if (f.topic && b.topic !== f.topic) return false;
-      if (f.q && [b.name, b.email, b.id, b.notes, b.department, b.topic].join(' ').toLowerCase().indexOf(f.q) === -1) return false;
+      if (f.pres === 'none' && b.presenter) return false;
+      if (f.pres && f.pres !== 'none' && b.presenter !== f.pres) return false;
+      if (f.q && [b.name, b.email, b.id, b.notes, b.department, b.topic, b.presenter, b.adminNotes].join(' ').toLowerCase().indexOf(f.q) === -1) return false;
       return true;
     }).sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
   }
@@ -377,6 +483,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
      kpi(upcoming, 'جلسات قادمة', 'المتاح: ' + data.slots.freeFuture + ' موعدًا'),
      kpi(onsite + ' / ' + (conf.length - onsite), 'حضوري / عن بُعد'),
      kpi(rate, 'نسبة الحضور الفعلي', att + ' حضر · ' + nos + ' لم يحضر'),
+     kpi(fmtHours(sumMin(delivered(list))), 'إجمالي ساعات الجلسات', delivered(list).length + ' جلسة مقدّمة'),
      kpi(canc, 'حجوزات ملغاة', list.length ? Math.round(canc * 100 / list.length) + '% من الإجمالي' : ''),
      kpi(data.signIns, 'مرات الدخول للصفحة', 'إجمالي')].forEach(function (k) { box.appendChild(k); });
   }
@@ -442,9 +549,14 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
         el('td', {}, [el('span', { 'class': 'pill ' + (b.mode === 'zoom' ? 'p-zoom' : 'p-on'), text: b.mode === 'zoom' ? 'Zoom' : 'حضوري' })]),
         el('td', {}, [status]),
         el('td', {}, [attCell(b)]),
+        el('td', { 'class': b.presenter ? 'pres' : 'muted', style: 'white-space:nowrap', text: b.presenter || '—' }),
+        el('td', { 'class': 'num', style: 'white-space:nowrap', text: b.durationMin ? b.durationMin + ' د' : '—' }),
+        el('td', { style: 'max-width:240px;font-size:12.5px', text: b.adminNotes || '' }),
         el('td', { style: 'white-space:nowrap' }, [rateCell(b)]),
         el('td', { style: 'max-width:220px;font-size:12.5px', text: b.notes || '' }),
-        el('td', { 'class': 'act-col' }, [act])
+        el('td', { 'class': 'act-col', style: 'white-space:nowrap' }, [b.status === 'Confirmed'
+          ? el('button', { type: 'button', 'class': 'lnk3', 'aria-label': 'تفاصيل جلسة ' + b.name, on: { click: function () { openDetails(b); } } }, [(b.presenter || b.durationMin || b.adminNotes) ? '✎ تعديل التفاصيل' : '✎ تسجيل التفاصيل'])
+          : null, act])
       ]));
     });
   }
@@ -492,6 +604,151 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
     a.textContent = data.automation ? (data.autoThanks ? 'الإرسال التلقائي مفعّل' : 'الإرسال التلقائي للشكر موقوف من الإعدادات') : 'الإرسال التلقائي غير مفعّل';
     $('enableAuto').hidden = !!data.automation;
   }
+  /* ---------- presenters ---------- */
+  function delivered(list) { return list.filter(function (b) { return b.status === 'Confirmed' && b.presenter && b.attendance !== 'No-show'; }); }
+  function sumMin(list) { return list.reduce(function (a, b) { return a + (Number(b.durationMin) || 0); }, 0); }
+  function fmtHours(min) { return (Math.round(min / 6) / 10).toFixed(1); }
+  function fmtHM(min) { var h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + ' س ' : '') + m + ' د'; }
+  function renderPresenters(list) {
+    var dl = delivered(list), rm = rmap(), by = {};
+    dl.forEach(function (b) {
+      var o = by[b.presenter] = by[b.presenter] || { n: 0, min: 0, timed: 0, rs: [] };
+      o.n++; if (b.durationMin) { o.min += Number(b.durationMin); o.timed++; }
+      if (rm[b.id]) o.rs.push(rm[b.id].rating);
+    });
+    var rows = Object.keys(by).map(function (k) { return [k, by[k]]; }).sort(function (a, b) { return b[1].min - a[1].min || b[1].n - a[1].n; });
+    var tot = sumMin(dl), timed = dl.filter(function (b) { return b.durationMin; }).length;
+    var box = $('pKpis'); box.innerHTML = '';
+    [kpi(rows.length, 'عدد مقدمي الجلسات', 'من ' + (data.presenters || []).filter(function (p) { return p.active; }).length + ' اسمًا مفعّلًا'),
+     kpi(dl.length, 'عدد الجلسات المقدّمة', timed + ' بمدة مسجّلة'),
+     kpi(fmtHours(tot), 'إجمالي الساعات', fmtHM(tot)),
+     kpi(timed ? Math.round(tot / timed) + ' د' : '—', 'متوسط مدة الجلسة', 'المخطط: ' + (data.sessionMinutes || 10) + ' د')].forEach(function (k) { box.appendChild(k); });
+    var tb = $('pRows'); tb.innerHTML = '';
+    if (!rows.length) tb.appendChild(el('tr', {}, [el('td', { colspan: '6', 'class': 'muted', text: 'لم تُسند جلسات لمقدمين بعد — استخدم «✎ تسجيل التفاصيل» في سجل الحجوزات.' })]));
+    rows.forEach(function (r) {
+      var o = r[1], avg = o.rs.length ? (o.rs.reduce(function (a, x) { return a + x; }, 0) / o.rs.length) : 0;
+      tb.appendChild(el('tr', {}, [
+        el('td', { 'class': 'pres', text: r[0] }),
+        el('td', { 'class': 'num', text: String(o.n) }),
+        el('td', { 'class': 'num', text: fmtHM(o.min) }),
+        el('td', { 'class': 'num', text: fmtHours(o.min) }),
+        el('td', { 'class': 'num', text: o.timed ? Math.round(o.min / o.timed) + ' د' : '—' }),
+        el('td', { 'class': 'num' }, o.rs.length ? [el('span', { 'class': 'st', text: starStr(Math.round(avg)) }), ' ' + avg.toFixed(1) + ' (' + o.rs.length + ')'] : ['—'])
+      ]));
+    });
+    if (rows.length > 1) tb.appendChild(el('tr', { style: 'font-weight:800;background:var(--purple-light)' }, [
+      el('td', { text: 'الإجمالي' }), el('td', { 'class': 'num', text: String(dl.length) }), el('td', { 'class': 'num', text: fmtHM(tot) }),
+      el('td', { 'class': 'num', text: fmtHours(tot) }), el('td', { 'class': 'num', text: timed ? Math.round(tot / timed) + ' د' : '—' }), el('td', {})]));
+    var hb = $('pHours'); hb.innerHTML = '';
+    var hrows = rows.filter(function (r) { return r[1].min; });
+    if (!hrows.length) hb.appendChild(el('p', { 'class': 'empty', text: 'لا توجد مدد مسجّلة بعد.' }));
+    var top = hrows.length ? hrows[0][1].min : 1;
+    hrows.forEach(function (r) {
+      hb.appendChild(el('div', { 'class': 'bar blue', title: r[0] + ': ' + fmtHM(r[1].min) }, [el('span', { 'class': 'n', text: r[0] }),
+        el('div', { 'class': 't' }, [el('i', { style: 'width:' + Math.round(r[1].min * 100 / top) + '%' })]), el('span', { 'class': 'c', text: fmtHours(r[1].min) })]));
+    });
+    var ended = list.filter(function (b) { return b.status === 'Confirmed' && b.ended && b.attendance !== 'No-show'; });
+    var missing = ended.filter(function (b) { return !b.presenter; }).length;
+    $('pNote').textContent = missing ? missing + ' جلسة منتهية بلا مقدم مسجّل ضمن الفلاتر الحالية.' : '';
+  }
+  function fillPresenterFilter() {
+    var sel = $('fPresenter'), cur = sel.value, names = {};
+    while (sel.options.length > 2) sel.remove(2);
+    (data.presenters || []).forEach(function (p) { names[p.name] = 1; });
+    data.bookings.forEach(function (b) { if (b.presenter) names[b.presenter] = 1; });
+    Object.keys(names).forEach(function (n) { sel.appendChild(el('option', { value: n, text: n })); });
+    sel.value = cur;
+  }
+  function renderPresenterList() {
+    var box = $('presenters'); box.innerHTML = '';
+    var counts = {}; data.bookings.forEach(function (b) { if (b.presenter && b.status === 'Confirmed') counts[b.presenter] = (counts[b.presenter] || 0) + 1; });
+    var ps = data.presenters || [];
+    if (!ps.length) box.appendChild(el('p', { 'class': 'empty', text: 'لا توجد أسماء بعد — أضف أول مقدم.' }));
+    ps.forEach(function (p) {
+      box.appendChild(el('div', { 'class': 'row' + (p.active ? '' : ' off') }, [
+        el('span', { 'class': 'nm', text: p.name }),
+        p.email ? el('span', { 'class': 'em', text: p.email }) : null,
+        el('span', { 'class': 'pill ' + (p.active ? 'p-ok' : 'p-past'), text: p.active ? 'مفعّل' : 'موقوف' }),
+        el('span', { 'class': 'count', text: (counts[p.name] || 0) + ' جلسة' }),
+        el('button', { type: 'button', 'class': 'btn btn-secondary', style: 'min-height:32px;padding:3px 12px',
+          on: { click: function () { togglePresenter(p); } } }, [p.active ? 'إيقاف' : 'تفعيل'])
+      ]));
+    });
+    var sel = $('newPresenter'); sel.innerHTML = '';
+    var have = {}; ps.forEach(function (p) { have[p.name] = 1; });
+    sel.appendChild(el('option', { value: '', text: '— اختر من فريق ITOC —' }));
+    (data.team || []).filter(function (t) { return !have[t.name]; }).forEach(function (t) { sel.appendChild(el('option', { value: t.name, 'data-email': t.email || '', text: t.name })); });
+    sel.appendChild(el('option', { value: '__other', text: 'اسم آخر (خارج الفريق)…' }));
+    $('newPresenterOther').hidden = true; $('newPresenterOther').value = '';
+    fillPresenterFilter();
+  }
+  function togglePresenter(p) {
+    call('setPresenterActive', p.name, !p.active).then(function (l) { data.presenters = l; renderPresenterList(); render(); msg(p.active ? 'تم إيقاف الاسم — لن يظهر في القائمة المنسدلة.' : 'تم تفعيل الاسم.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  }
+  function renderAdmins() {
+    var box = $('admins'); box.innerHTML = '';
+    var own = !!data.isOwner;
+    $('adminsRO').hidden = own; $('addAdminForm').hidden = !own;
+    (data.admins || []).forEach(function (a) {
+      var kids = [el('span', { 'class': 'nm', text: a.name || a.email.split('@')[0] }), el('span', { 'class': 'em', text: a.email }),
+        el('span', { 'class': 'pill ' + (a.owner ? 'p-own' : (a.active ? 'p-ok' : 'p-past')), text: a.owner ? 'مالك النظام' : (a.active ? 'مسموح' : 'موقوف') })];
+      if (own && !a.owner) {
+        kids.push(el('button', { type: 'button', 'class': 'btn btn-secondary', style: 'min-height:32px;padding:3px 12px',
+          on: { click: function () { adminAct('setAdminActive', a, !a.active); } } }, [a.active ? 'إيقاف' : 'تفعيل']));
+        kids.push(el('button', { type: 'button', 'class': 'lnk', 'aria-label': 'حذف صلاحية ' + a.email,
+          on: { click: function () { if (window.confirm('حذف صلاحية ' + a.email + ' نهائيًا من القائمة؟')) adminAct('removeAdmin', a); } } }, ['حذف']));
+      }
+      box.appendChild(el('div', { 'class': 'row' + (a.active ? '' : ' off') }, kids));
+    });
+    var sel = $('newAdmin'); sel.innerHTML = '';
+    var have = {}; (data.admins || []).forEach(function (a) { if (a.active) have[a.email] = 1; });
+    sel.appendChild(el('option', { value: '', text: '— اختر من فريق ITOC —' }));
+    (data.team || []).filter(function (t) { return t.email && !have[t.email]; }).forEach(function (t) { sel.appendChild(el('option', { value: t.email, 'data-name': t.name, text: t.name + ' — ' + t.email })); });
+    sel.appendChild(el('option', { value: '__other', text: 'بريد آخر @sr.edu.sa…' }));
+    $('newAdminEmail').hidden = true; $('newAdminEmail').value = '';
+  }
+  function adminAct(fn, a, v) {
+    call(fn, a.email, v).then(function (l) { data.admins = l; renderAdmins(); msg(fn === 'removeAdmin' ? 'تم حذف الصلاحية.' : (v ? 'تم تفعيل صلاحية الدخول.' : 'تم إيقاف صلاحية الدخول.'), 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  }
+
+  /* ---------- session-details dialog ---------- */
+  var editing = null;
+  function openDetails(b) {
+    editing = b;
+    $('dlgSub').textContent = b.name + ' · ' + arDate(b.date) + ' ' + b.time + ' · ' + b.id;
+    var sel = $('dPresenter'); sel.innerHTML = '';
+    sel.appendChild(el('option', { value: '', text: '— اختر مقدم الجلسة —' }));
+    var ps = (data.presenters || []).filter(function (p) { return p.active || p.name === b.presenter; });
+    ps.forEach(function (p) { sel.appendChild(el('option', { value: p.name, text: p.name + (p.active ? '' : ' (موقوف)') })); });
+    sel.value = b.presenter || '';
+    var planned = data.sessionMinutes || 10;
+    $('dPlanned').textContent = planned;
+    $('dDur').value = b.durationMin || '';
+    var q = $('durQuick'); q.innerHTML = '';
+    [planned, 5, 15, 20, 30].filter(function (v, i, a) { return a.indexOf(v) === i; }).forEach(function (v) {
+      q.appendChild(el('button', { type: 'button', on: { click: function () { $('dDur').value = v; } } }, [v + ' د']));
+    });
+    $('dNotes').value = b.adminNotes || ''; $('dCount').textContent = $('dNotes').value.length;
+    var d = $('dlg');
+    if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+    sel.focus();
+  }
+  function closeDetails() { var d = $('dlg'); if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); editing = null; }
+  function saveDetails() {
+    var b = editing; if (!b) return;
+    var dur = $('dDur').value.trim(), pres = $('dPresenter').value;
+    if (dur && (!/^\d+$/.test(dur) || +dur < 1 || +dur > 240)) { $('dDur').focus(); msg('الوقت المستغرق يجب أن يكون رقمًا بين 1 و240 دقيقة.'); return; }
+    if (dur && !pres) { $('dPresenter').focus(); msg('اختر مقدم الجلسة قبل تسجيل الوقت المستغرق.'); return; }
+    var payload = { presenter: pres, durationMin: dur, adminNotes: $('dNotes').value.trim() };
+    $('dSave').disabled = true;
+    call('setSessionDetails', b.id, payload).then(function (r) {
+      b.presenter = r.presenter; b.durationMin = r.durationMin; b.adminNotes = r.adminNotes;
+      closeDetails(); fillPresenterFilter(); renderPresenterList(); render(); msg('تم حفظ تفاصيل جلسة ' + b.name + '.', 'ok');
+    }).catch(function (e) { msg(errText(e)); }).then(function () { $('dSave').disabled = false; });
+  }
+
   function renderPrintHead(list) {
     var h = $('printHead'); h.innerHTML = '';
     h.appendChild(el('div', { style: 'font-size:16px;font-weight:800;color:#3a1464', text: 'تقرير حجوزات جلسات Coffee with IT' }));
@@ -501,7 +758,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   function render() {
     if (!data) return;
     var list = filtered();
-    renderKpis(list); renderCharts(list); renderEval(list); renderTable(list); renderPrintHead(list);
+    renderKpis(list); renderCharts(list); renderPresenters(list); renderEval(list); renderTable(list); renderPrintHead(list);
   }
   function renderTopics() {
     var box = $('topics'); box.innerHTML = '';
@@ -541,7 +798,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
       data = d;
       $('adminWho').textContent = d.admin; $('ver').textContent = 'v' + d.version; $('gen').textContent = d.generatedAt;
       $('sheetLink').href = d.sheetUrl || '#';
-      fillDepts(); renderTopics(); $('loading').hidden = true; $('app').hidden = false; render();
+      fillDepts(); renderTopics(); renderPresenterList(); renderAdmins(); $('loading').hidden = true; $('app').hidden = false; render();
     }).catch(function (e) { $('loading').hidden = true; msg(errText(e)); })
       .then(function () { $('refresh').disabled = false; });
   }
@@ -562,10 +819,10 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   function exportCsv() {
     var list = filtered();
     var rm = rmap();
-    var head = ['رقم الحجز','تاريخ التسجيل','التاريخ','اليوم','الوقت','الموضوع','الاسم','البريد','الإدارة','التحويلة','طريقة الحضور','الحالة','الحضور الفعلي','ملاحظات','التقييم (1-5)','تعليق التقييم','إرسال الشكر'];
+    var head = ['رقم الحجز','تاريخ التسجيل','التاريخ','اليوم','الوقت','الموضوع','الاسم','البريد','الإدارة','التحويلة','طريقة الحضور','الحالة','الحضور الفعلي','مقدم الجلسة','الوقت المستغرق (دقيقة)','ملاحظات الجلسة','ملاحظات الموظف','التقييم (1-5)','تعليق التقييم','إرسال الشكر'];
     var lines = [head].concat(list.map(function (b) {
       return [b.id, b.timestamp, b.date, DAYS[pd(b.date).getDay()], b.time, b.topic, b.name, b.email, b.department, b.extension,
-        b.mode === 'zoom' ? 'عن بُعد (Zoom)' : 'حضوري', b.status === 'Confirmed' ? 'مؤكد' : 'ملغى', ATT[b.attendance] || '', b.notes,
+        b.mode === 'zoom' ? 'عن بُعد (Zoom)' : 'حضوري', b.status === 'Confirmed' ? 'مؤكد' : 'ملغى', ATT[b.attendance] || '', b.presenter || '', b.durationMin || '', b.adminNotes || '', b.notes,
         rm[b.id] ? rm[b.id].rating : '', rm[b.id] ? rm[b.id].comment : '', b.thanksSentAt || ''];
     })).map(function (r) { return r.map(function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -575,7 +832,31 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
 
   /* ---------- wire up ---------- */
   ['fFrom','fTo'].forEach(function (id) { $(id).addEventListener('change', function () { document.querySelectorAll('.chip[data-range]').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); }); render(); }); });
-  ['fStatus','fMode','fAtt','fDept','fTopic'].forEach(function (id) { $(id).addEventListener('change', render); });
+  ['fStatus','fMode','fAtt','fDept','fTopic','fPresenter'].forEach(function (id) { $(id).addEventListener('change', render); });
+  $('dlgForm').addEventListener('submit', function (ev) { ev.preventDefault(); saveDetails(); });
+  $('dCancel').addEventListener('click', closeDetails);
+  $('dNotes').addEventListener('input', function () { $('dCount').textContent = $('dNotes').value.length; });
+  $('newPresenter').addEventListener('change', function () { var o = $('newPresenter').value === '__other'; $('newPresenterOther').hidden = !o; if (o) $('newPresenterOther').focus(); });
+  $('addPresenterForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var sel = $('newPresenter'), v = sel.value, name = v, email = '';
+    if (!v) { sel.focus(); return; }
+    if (v === '__other') { name = $('newPresenterOther').value.trim(); if (!name) { $('newPresenterOther').focus(); return; } }
+    else email = sel.options[sel.selectedIndex].getAttribute('data-email') || '';
+    call('addPresenter', name, email).then(function (l) { data.presenters = l; renderPresenterList(); render(); msg('تمت إضافة «' + name + '» إلى قائمة مقدمي الجلسات.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  });
+  $('newAdmin').addEventListener('change', function () { var o = $('newAdmin').value === '__other'; $('newAdminEmail').hidden = !o; if (o) $('newAdminEmail').focus(); });
+  $('addAdminForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var sel = $('newAdmin'), v = sel.value, email = v, name = '';
+    if (!v) { sel.focus(); return; }
+    if (v === '__other') { email = $('newAdminEmail').value.trim().toLowerCase(); if (!/^[^@\s]+@sr\.edu\.sa$/.test(email)) { $('newAdminEmail').focus(); msg('أدخل بريدًا جامعيًا صحيحًا @sr.edu.sa'); return; } }
+    else name = sel.options[sel.selectedIndex].getAttribute('data-name') || '';
+    if (!window.confirm('منح ' + (name || email) + ' صلاحية الدخول على لوحة الإدارة (عرض كل الحجوزات وتعديلها)؟')) return;
+    call('addAdmin', email, name).then(function (l) { data.admins = l; renderAdmins(); msg('تم منح صلاحية الدخول إلى ' + email + '.', 'ok'); })
+      .catch(function (e) { msg(errText(e)); });
+  });
   $('addTopicForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var v = $('newTopic').value.trim(); if (!v) { $('newTopic').focus(); return; }
@@ -584,7 +865,7 @@ footer .wrap{padding-top:16px;padding-bottom:16px;display:flex;justify-content:s
   });
   $('fQ').addEventListener('input', render);
   document.querySelectorAll('.chip[data-range]').forEach(function (c) { c.addEventListener('click', function () { setRange(c.getAttribute('data-range')); }); });
-  $('reset').addEventListener('click', function () { ['fStatus','fMode','fAtt','fDept','fTopic','fQ'].forEach(function (id) { $(id).value = ''; }); setRange('all'); });
+  $('reset').addEventListener('click', function () { ['fStatus','fMode','fAtt','fDept','fTopic','fPresenter','fQ'].forEach(function (id) { $(id).value = ''; }); setRange('all'); });
   $('csv').addEventListener('click', exportCsv);
   $('sendPending').addEventListener('click', function () {
     if (!window.confirm('إرسال رسالة الشكر والتقييم لكل جلسة منتهية لم تُرسل لها بعد (يُستثنى من سُجّل «لم يحضر»)؟')) return;
