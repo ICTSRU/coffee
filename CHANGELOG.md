@@ -1,5 +1,12 @@
 # Changelog — Coffee with IT
 
+## v3.2 — 2026-10-22
+- **Minutes instead of hours** in the admin dashboard: top KPI «إجمالي دقائق الجلسات», presenters KPI «إجمالي الدقائق»,
+  per-presenter table column «إجمالي الدقائق» (the hours and h/min columns were removed) and the bar chart «إجمالي الدقائق لكل مقدم».
+- **Bookings log reformatted to fit the page without horizontal scrolling** (17 columns → 9 grouped columns, fixed layout):
+  الموعد (date, time, booking no.) · الموظف (name, e-mail, department · extension) · الموضوع (up to 3 lines, full text on hover) ·
+  الحالة (mode + status) · الحضور الفعلي · مقدم الجلسة / المدة · الملاحظات (session notes + employee notes, labelled) · التقييم · إجراء.
+
 ## v3.1 — 2026-10-22
 - **Session details in the bookings log (admin).** New «✎ تسجيل التفاصيل» action on every confirmed booking opens a dialog with:
   - **مقدم الجلسة** — chosen from a drop-down (Presenters list only),
