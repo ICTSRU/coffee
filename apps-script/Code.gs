@@ -1,5 +1,5 @@
 /**
- * Coffee with IT — Booking System  ·  v3.6
+ * Coffee with IT — Booking System  ·  v3.8
  * Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)
  *
  * Container-bound Apps Script for the Google Sheet "Coffee with IT — Bookings".
@@ -7,7 +7,7 @@
  * Deploy as Web app → Execute as: Me · Who has access: Anyone within sr.edu.sa
  */
 
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.8';
 const DOMAIN = 'sr.edu.sa';
 const SHEETS = { SETTINGS: 'Settings', SLOTS: 'Slots', BOOKINGS: 'Bookings', SIGNINS: 'SignIns', TOPICS: 'Topics', RATINGS: 'Ratings',
   PRESENTERS: 'Presenters', ADMINS: 'Admins' };
@@ -19,7 +19,11 @@ const BOOKING_HEADERS = ['BookingId', 'Timestamp', 'Email', 'Name', 'Department'
   // v3.3 — office visit location, and «موضوع آخر» typed by the attendee
   'Location', 'TopicOther',
   // v3.6 — language the attendee booked in ('ar' | 'en'); every e-mail for this booking uses it
-  'Lang'];
+  'Lang',
+  // v3.7 — who last recorded the session details (admin or the presenter from «جلساتي») and when
+  'DetailsBy', 'DetailsAt',
+  // v3.8 — when the presenter was e-mailed to record the session details
+  'PresenterMailAt'];
 const COL = BOOKING_HEADERS.reduce((o, h, i) => (o[h] = i, o), {});
 
 const MODE_LABEL = { onsite: 'حضوري', office: 'حضوري — في مكتبك', zoom: 'عن بُعد (Zoom)' };
@@ -107,9 +111,11 @@ const RATE_OPEN_EN = 'What would you suggest to improve Coffee with IT sessions?
 
 function doGet(e) {
   const email = activeEmail_();
-  const wantsAdmin = e && e.parameter && e.parameter.page === 'admin';
-  if (!isAllowed_(email) || (wantsAdmin && !isAdmin_(email))) {
-    return HtmlService.createHtmlOutput(deniedPage_(email, wantsAdmin))
+  const page = (e && e.parameter && e.parameter.page) || '';
+  const wantsAdmin = page === 'admin';
+  const wantsMy = page === 'my';
+  if (!isAllowed_(email) || (wantsAdmin && !isAdmin_(email)) || (wantsMy && !myPresenter_(email))) {
+    return HtmlService.createHtmlOutput(deniedPage_(email, wantsAdmin ? 'admin' : (wantsMy ? 'my' : '')))
       .setTitle('Coffee with IT')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
@@ -117,6 +123,14 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.page === 'rate') {
     return HtmlService.createHtmlOutputFromFile('Rate')
       .setTitle('تقييم جلسة Coffee with IT')
+      .setFaviconUrl(ASSET_URL + 'cwit-favicon.png')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  // Presenters land on «جلساتي» when they open the app without a page; ?page=book always opens the booking page.
+  if (wantsMy || (!page && myPresenter_(email))) {
+    return HtmlService.createHtmlOutputFromFile('My')
+      .setTitle('جلساتي — Coffee with IT')
       .setFaviconUrl(ASSET_URL + 'cwit-favicon.png')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -151,7 +165,8 @@ function getInitData() {
     myBookings: myBookings_(email),
     topics: topicRows_().filter(t => t.active).map(t => t.name),
     isAdmin: isAdmin_(email),
-    adminUrl: isAdmin_(email) ? ScriptApp.getService().getUrl() + '?page=admin' : ''
+    adminUrl: isAdmin_(email) ? ScriptApp.getService().getUrl() + '?page=admin' : '',
+    myUrl: myPresenter_(email) ? ScriptApp.getService().getUrl() + '?page=my' : ''
   };
 }
 
@@ -290,6 +305,7 @@ function getAdminData() {
     status: r[COL.Status], cancelledAt: r[COL.CancelledAt], attendance: r[COL.Attendance] || '',
     topic: r[COL.Topic] || '', thanksSentAt: r[COL.ThanksSentAt] || '',
     presenter: r[COL.Presenter] || '', adminNotes: r[COL.AdminNotes] || '', durationMin: Number(r[COL.DurationMin]) || 0,
+    detailsBy: r[COL.DetailsBy] || '', detailsAt: r[COL.DetailsAt] || '', presenterMailAt: r[COL.PresenterMailAt] || '',
     ended: toDateTime_(r[COL.Date], r[COL.Time]).getTime() + (Number(s.SessionMinutes) || 10) * 60000 <= Date.now()
   }));
   const ratings = ratingRows_().map(x => ({ bookingId: x.BookingId, email: x.Email, name: x.Name, department: x.Department,
@@ -308,10 +324,12 @@ function getAdminData() {
     slots: { total: slots.length, future: futureSlots.length, freeFuture: freeFuture },
     signIns: signIns, sheetUrl: SpreadsheetApp.getActive().getUrl(),
     ratings: ratings, automation: automationOn_(), autoThanks: String(s.AutoThanks).toUpperCase() !== 'FALSE',
+    presenterMail: String(s.PresenterMail).toUpperCase() !== 'FALSE',
     rate: { q: RATE_Q_AR, labels: RATE_LABELS.map(l => l[0]) },
     sessionMinutes: Number(s.SessionMinutes) || 10,
     presenters: presenterRows_(), team: TEAM,
-    admins: adminList_(), isOwner: isOwner_(email), owners: DEFAULT_ADMINS
+    admins: adminList_(), isOwner: isOwner_(email), owners: DEFAULT_ADMINS,
+    myUrl: myPresenter_(email) ? ScriptApp.getService().getUrl() + '?page=my' : ''
   };
 }
 
@@ -319,7 +337,7 @@ function getAdminData() {
 
 /** d = {presenter, adminNotes, durationMin}. The presenter must come from the Presenters list (drop-down). */
 function setSessionDetails(id, d) {
-  requireAdmin_();
+  const by = requireAdmin_();
   d = d || {};
   const presenter = norm_(clean_(d.presenter, 80));
   const notes = clean_(d.adminNotes, 500);
@@ -334,11 +352,88 @@ function setSessionDetails(id, d) {
   const ids = sh.getRange(2, COL.BookingId + 1, Math.max(1, sh.getLastRow() - 1), 1).getDisplayValues();
   for (let i = 0; i < ids.length; i++) {
     if (ids[i][0] === id) {
+      const at = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
       sh.getRange(i + 2, COL.Presenter + 1, 1, 3).setNumberFormat('@').setValues([[presenter, notes, String(dur)]]);
-      return { ok: true, id: id, presenter: presenter, adminNotes: notes, durationMin: Number(dur) || 0 };
+      sh.getRange(i + 2, COL.DetailsBy + 1, 1, 2).setNumberFormat('@').setValues([[by, at]]);
+      return { ok: true, id: id, presenter: presenter, adminNotes: notes, durationMin: Number(dur) || 0, detailsBy: by, detailsAt: at };
     }
   }
   throw new Error('لم يتم العثور على الحجز.');
+}
+
+/* ─────────────── v3.7 · «جلساتي» — the presenter's own page ─────────────── */
+
+/** The active Presenters row whose e-mail is this account, or null. */
+function myPresenter_(email) {
+  const e = String(email || '').toLowerCase();
+  if (!e) return null;
+  try { return presenterRows_().filter(p => p.active && p.email && p.email === e)[0] || null; }
+  catch (err) { return null; }
+}
+
+function requirePresenter_() {
+  const email = requireUser_();
+  const me = myPresenter_(email);
+  if (!me) throw new Error('صفحة «جلساتي» متاحة لمقدمي الجلسات المسجّلين في القائمة فقط.');
+  return { email: email, name: me.name };
+}
+
+/** Sessions assigned to the signed-in presenter (Bookings › Presenter = their name), with the attendee's rating. */
+function getMySessions() {
+  const me = requirePresenter_();
+  ensureBookingHeaders_();
+  const s = getSettings_();
+  const mins = Number(s.SessionMinutes) || 10;
+  const ratings = {};
+  ratingRows_().forEach(x => { ratings[x.BookingId] = { rating: Number(x.Rating) || 0, comment: x.Comment || '', at: x.UpdatedAt || x.Timestamp }; });
+  const rows = sheet_(SHEETS.BOOKINGS).getDataRange().getDisplayValues().slice(1)
+    .filter(r => r[COL.BookingId] && r[COL.Status] === 'Confirmed' && norm_(r[COL.Presenter]) === me.name);
+  const sessions = rows.map(r => {
+    const start = toDateTime_(r[COL.Date], r[COL.Time]).getTime();
+    return {
+      id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], endTime: addMinutes_(r[COL.Time], mins),
+      name: r[COL.Name], email: r[COL.Email], department: r[COL.Department], extension: r[COL.Extension],
+      topic: r[COL.Topic] || String(s.Topic || ''), topicOther: String(r[COL.TopicOther]).toUpperCase() === 'TRUE',
+      mode: modeKey_(r[COL.Mode]), location: r[COL.Location] || '', notes: r[COL.Notes] || '',
+      attendance: r[COL.Attendance] || '', durationMin: Number(r[COL.DurationMin]) || 0, adminNotes: r[COL.AdminNotes] || '',
+      detailsBy: r[COL.DetailsBy] || '', detailsAt: r[COL.DetailsAt] || '',
+      started: start <= Date.now(), ended: start + mins * 60000 <= Date.now(),
+      rating: ratings[r[COL.BookingId]] || null
+    };
+  }).sort((a, b) => (a.date + a.time < b.date + b.time ? 1 : -1));
+  return {
+    me: me, version: APP_VERSION, sessionMinutes: mins, sessions: sessions,
+    topicsEn: topicRows_().filter(t => t.nameEn).reduce((o, t) => (o[t.name] = t.nameEn, o), {}),
+    onsiteLocation: String(s.OnsiteLocation || ''), onsiteLocationEn: String(s.OnsiteLocationEn || ''),
+    rate: { labels: RATE_LABELS },
+    bookUrl: ScriptApp.getService().getUrl() + '?page=book',
+    adminUrl: isAdmin_(me.email) ? ScriptApp.getService().getUrl() + '?page=admin' : ''
+  };
+}
+
+/** Presenter records the actual duration and notes of one of THEIR sessions (presenter itself is set by an admin). */
+function setMySession(id, d) {
+  const me = requirePresenter_();
+  d = d || {};
+  const notes = clean_(d.adminNotes, 500);
+  const raw = String(d.durationMin == null ? '' : d.durationMin).trim();
+  const dur = raw === '' ? '' : Math.round(Number(raw));
+  if (dur !== '' && (!isFinite(dur) || dur < 1 || dur > MAX_DURATION_MIN))
+    throw new Error('الوقت المستغرق يجب أن يكون بين 1 و' + MAX_DURATION_MIN + ' دقيقة.');
+  ensureBookingHeaders_();
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const r = findBooking_(id);
+    if (!r || r.row[COL.Status] !== 'Confirmed') throw new Error('لم يتم العثور على الحجز.');
+    if (norm_(r.row[COL.Presenter]) !== me.name) throw new Error('هذه الجلسة غير مسندة إليك.');
+    const s = getSettings_();
+    if (dur !== '' && toDateTime_(r.row[COL.Date], r.row[COL.Time]) > new Date()) throw new Error('يمكنك تسجيل مدة الجلسة بعد بدايتها.');
+    const at = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+    const sh = sheet_(SHEETS.BOOKINGS);
+    sh.getRange(r.index + 1, COL.AdminNotes + 1, 1, 2).setNumberFormat('@').setValues([[notes, String(dur)]]);
+    sh.getRange(r.index + 1, COL.DetailsBy + 1, 1, 2).setNumberFormat('@').setValues([[me.email, at]]);
+    return { ok: true, id: id, adminNotes: notes, durationMin: Number(dur) || 0, detailsBy: me.email, detailsAt: at };
+  } finally { lock.releaseLock(); }
 }
 
 /* ─────────────── v3.1 · Presenters list (drop-down source) ─────────────── */
@@ -700,8 +795,87 @@ function enableAutomation() {
 function hourlyJobs() {
   try { sendReminders(); } catch (err) { console.warn('reminders: ' + err); }
   try {
+    if (String(getSettings_().PresenterMail).toUpperCase() !== 'FALSE') processPresenterMails_();
+  } catch (err) { console.warn('presenter mails: ' + err); }
+  try {
     if (String(getSettings_().AutoThanks).toUpperCase() !== 'FALSE') processThanks_(true);
   } catch (err) { console.warn('thanks: ' + err); }
+}
+
+/* ─────────────── v3.8 · e-mail to the presenter after each session ─────────────── */
+
+/**
+ * After a session ends, e-mails its presenter once, asking them to record the actual duration and notes in «جلساتي».
+ * Skipped when: no presenter, no-show, duration already recorded, already e-mailed, presenter has no e-mail,
+ * or the session ended more than 7 days ago. Runs from the hourly automation (hourlyJobs).
+ */
+function processPresenterMails_() {
+  const s = getSettings_();
+  ensureBookingHeaders_();
+  const sh = sheet_(SHEETS.BOOKINGS);
+  const data = sh.getDataRange().getDisplayValues();
+  const mins = Number(s.SessionMinutes) || 10, now = Date.now();
+  const byName = {};
+  presenterRows_().forEach(p => { if (p.email) byName[p.name] = p; });
+  let sent = 0;
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    if (!r[COL.BookingId] || r[COL.Status] !== 'Confirmed' || !r[COL.Presenter] || r[COL.PresenterMailAt]) continue;
+    if (r[COL.Attendance] === 'No-show' || r[COL.DurationMin]) continue;
+    const end = toDateTime_(r[COL.Date], r[COL.Time]).getTime() + mins * 60000;
+    if (end > now || now - end > 7 * 86400000) continue;
+    const p = byName[norm_(r[COL.Presenter])];
+    if (!p) { console.warn('Presenter "' + r[COL.Presenter] + '" has no e-mail in the Presenters sheet — ' + r[COL.BookingId]); continue; }
+    try {
+      sendPresenterMail_(p, r, s);
+      sh.getRange(i + 1, COL.PresenterMailAt + 1).setNumberFormat('@')
+        .setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'));
+      sent++;
+    } catch (err) { console.warn(err); }
+  }
+  return sent;
+}
+
+function sendPresenterMail_(p, r, s) {
+  const mins = Number(s.SessionMinutes) || 10, mode = modeKey_(r[COL.Mode]);
+  const b = { id: r[COL.BookingId], date: r[COL.Date], time: r[COL.Time], endTime: addMinutes_(r[COL.Time], mins),
+    employee: r[COL.Name], department: r[COL.Department], topic: r[COL.Topic] || String(s.Topic || ''),
+    mode: mode, modeLabel: mode === 'office' ? 'حضوري — في مكتب الموظف' : MODE_LABEL[mode], where: whereOf_(r, s), notes: r[COL.Notes] || '' };
+  withLang_('ar', () => mail_({ to: p.email,
+    subject: 'سجّل تفاصيل جلستك — Coffee with IT · ' + arDate_(b.date) + ' · ' + b.time,
+    htmlBody: presenterHtml_(b, p, s) }, s));
+}
+
+function presenterHtml_(b, p, s) {
+  const link = webAppUrl_(s) + '?page=my&lang=ar';
+  const body =
+    p_('مرحبًا <b>' + esc_(p.name) + '</b>،') +
+    p_('انتهت جلسة <b>' + ltrSpan_('Coffee with IT') + '</b> التي قدّمتها مع <b>' + esc_(b.employee) + '</b>. ' +
+      'نرجو تسجيل <b>الوقت المستغرق</b> و<b>ملاحظاتك على الجلسة</b> من صفحة «جلساتي»، وتظهر مباشرة في لوحة الإدارة.') +
+    sectionTitle_('تفاصيل الجلسة') +
+    detailsCard_([
+      ['الموظف', esc_(b.employee) + (b.department ? '<span style="font-weight:normal;color:' + C.muted + '"> · ' + esc_(b.department) + '</span>' : '')],
+      ['الموضوع', keepLatin_(esc_(b.topic))],
+      ['التاريخ', esc_(arDate_(b.date))],
+      ['الوقت', timeRange_(b)],
+      ['طريقة الحضور', modePill_(b.mode, b.modeLabel) + (b.mode === 'office' && b.where ? ' <span style="font-weight:normal">' + esc_(b.where) + '</span>' : '')],
+      ['رقم الحجز', '<span style="font-family:Consolas,Menlo,monospace;background:' + C.light + ';color:' + C.dark + ';padding:2px 8px;border-radius:4px">' + esc_(b.id) + '</span>']
+    ].concat(b.notes ? [['ملاحظات الموظف', esc_(b.notes)]] : [])) +
+    '<div style="margin:18px 0 6px">' + button_('افتح «جلساتي» وسجّل التفاصيل', link, C.purple) + '</div>' +
+    note_('إن لم تُعقد الجلسة، أبلغ مسؤول النظام ليسجّلها «لم يحضر» من لوحة الإدارة.');
+  return layout_({ preheader: 'سجّل الوقت المستغرق وملاحظاتك — ' + b.employee + ' · ' + b.time,
+    title: 'سجّل تفاصيل جلستك', subtitle: arDate_(b.date) + ' · من ' + b.time + ' إلى ' + b.endTime, accent: C.blue, body: body });
+}
+
+/** Admin: e-mail a sample presenter message to yourself. */
+function sendPresenterTest() {
+  const email = requireAdmin_();
+  const s = getSettings_();
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const row = []; row[COL.BookingId] = 'CWI-TEST'; row[COL.Date] = today; row[COL.Time] = '10:00'; row[COL.Name] = 'موظف تجريبي';
+  row[COL.Department] = 'الإدارة التنفيذية للاتصالات وتقنية المعلومات'; row[COL.Topic] = String(s.Topic || ''); row[COL.Mode] = MODE_LABEL.onsite;
+  sendPresenterMail_({ name: 'تجربة', email: email }, row, s);
+  return { ok: true, to: email };
 }
 
 /** auto=true: only sessions that ended ThanksDelayMinutes ago and within the last 7 days. */
@@ -815,6 +989,7 @@ function setup() {
     ['AdminEmails', '', '(قديم) تُدار صلاحيات لوحة الإدارة الآن من اللوحة نفسها — ورقة Admins. m.elmahdy@sr.edu.sa مالك النظام دائمًا'],
     ['AutoThanks', 'TRUE', 'إرسال رسالة الشكر والتقييم تلقائيًا بعد انتهاء الجلسة (يتطلب تفعيل الإرسال التلقائي)'],
     ['ThanksDelayMinutes', '30', 'بعد كم دقيقة من انتهاء الجلسة تُرسل رسالة الشكر'],
+    ['PresenterMail', 'TRUE', 'إرسال بريد لمقدم الجلسة بعد انتهائها لتسجيل الوقت المستغرق والملاحظات في «جلساتي» (يتطلب تفعيل الإرسال التلقائي)'],
     ['WebAppUrl', DEFAULT_WEBAPP_URL, 'رابط تطبيق الحجز (exec) — يُستخدم في روابط التقييم']
   ]);
   ensureSheet_(SHEETS.SLOTS, ['SlotId', 'Date', 'Time', 'Capacity', 'Active'], []);
@@ -1490,7 +1665,17 @@ function safeAlert_(msg) {
   try { SpreadsheetApp.getUi().alert(msg); } catch (err) { console.log(msg); }
 }
 
-function deniedPage_(email, admin) {
+function deniedPage_(email, which) {
+  const admin = which === 'admin';
+  if (which === 'my' && isAllowed_(email)) {
+    return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;max-width:520px;margin:12vh auto;padding:28px;' +
+      'border:1px solid rgba(80,30,140,.15);border-radius:4px;color:#241436;text-align:center">' +
+      '<div style="font-size:22px;font-weight:bold;color:#501e8c;margin-bottom:10px">الدخول غير متاح · Access unavailable</div>' +
+      '<p style="line-height:1.8">صفحة «جلساتي» متاحة لمقدمي جلسات Coffee with IT المسجّلين في القائمة فقط.<br>' +
+      '<span dir="ltr">«My sessions» is available to listed Coffee with IT presenters only.</span></p>' +
+      '<p style="color:#6b5a80;font-size:13px">الحساب الحالي: ' + esc_(email) + '</p>' +
+      '<p style="font-size:13px;color:#6b5a80">للإضافة إلى القائمة تواصل مع مسؤول النظام · servicedesk@sr.edu.sa</p></div>';
+  }
   return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;max-width:520px;margin:12vh auto;padding:28px;' +
     'border:1px solid rgba(80,30,140,.15);border-radius:4px;color:#241436;text-align:center">' +
     '<div style="font-size:22px;font-weight:bold;color:#501e8c;margin-bottom:10px">الدخول غير متاح</div>' +

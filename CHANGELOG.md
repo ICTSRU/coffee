@@ -1,5 +1,34 @@
 # Changelog — Coffee with IT
 
+## v3.8 — 2026-10-22
+- **E-mail to the presenter after each session** — once a session ends, its presenter receives (from itoc@sr.edu.sa) «سجّل تفاصيل جلستك»:
+  employee and department, topic, date and time, attendance mode and office location, booking number, the employee's notes,
+  and a button that opens «جلساتي». Sent once per session (new Bookings column `PresenterMailAt`).
+  Not sent when: no presenter is assigned, the session is marked «لم يحضر», the duration is already recorded,
+  the presenter has no e-mail in the Presenters sheet, or the session ended more than 7 days ago.
+  Runs with the hourly automation (so it arrives within an hour of the session ending); a presenter assigned later is e-mailed on the next run.
+  New setting `PresenterMail` (TRUE/FALSE). Admin dashboard: status label, «إرسال بريد المقدم التجريبي إليّ», and «✉ أُبلغ المقدم» in the bookings log.
+- **Arabic is the default on every visit.** The page no longer follows the browser language or remembers English between visits.
+  «English» (or a link with `?lang=en`, as in English e-mails) switches it for the current browser session only. The old saved
+  language from v3.6–3.7 is cleared automatically. Theme (light/dark) still follows the device and remembers the user's choice.
+
+## v3.7 — 2026-10-22
+- **New page «جلساتي» (My sessions) for presenters** — `…/exec?page=my`, new file `apps-script/My.html`.
+  - Any account listed and active in the Presenters sheet **with its e-mail** lands on «جلساتي» when it opens the app;
+    the booking page stays one click away (`?page=book`). Others are not affected.
+  - Shows only the sessions assigned to that presenter: date and time, topic, employee (name, e-mail, department, extension),
+    attendance mode and location, booking number, the employee's notes, and the employee's rating and comment.
+  - Indicators: sessions delivered, total minutes (and average per session), my average rating, sessions awaiting a duration.
+  - Filters: all / awaiting details / upcoming / past, plus search.
+  - The presenter records the **actual duration** (allowed once the session has started) and **session notes** (any time).
+    Who the presenter is stays an admin decision; a presenter can edit only their own sessions.
+  - Arabic / English and light / dark, like every other page.
+- **Shows up in the admin dashboard automatically** — saves go to the same Bookings columns the dashboard reads
+  (`AdminNotes`, `DurationMin`). New columns `DetailsBy`, `DetailsAt` record who saved and when; the bookings log shows
+  «✓ سجّلها المقدم» or the admin's name. The dashboard refreshes quietly every 2 minutes and when its tab comes back into view
+  (not while the details dialog is open or a field is being edited).
+- Links: «جلساتي» on the booking page and in the admin header for presenters.
+
 ## v3.6 — 2026-10-22
 - **English version of every page** — booking, rating, admin dashboard and the GitHub sign-in page.
   - «English / عربي» button in the white logo bar; the page switches instantly (no reload), including direction (LTR/RTL),

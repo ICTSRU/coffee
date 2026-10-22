@@ -247,3 +247,35 @@ EN = {
 # preferences buttons
 "الوضع الداكن": "Dark mode", "الوضع الفاتح": "Light mode", "التبديل إلى الإنجليزية": "Switch to English",
 }
+
+# v3.7 — «جلساتي» (My sessions)
+EN.update({
+"جلساتي": "My sessions", "جلساتي — Coffee with IT": "My sessions — Coffee with IT",
+"مقدم جلسات": "Presenter ·",
+"جارٍ تحميل جلساتك…": "Loading your sessions…",
+"تصفية الجلسات": "Filter sessions",
+"بانتظار التسجيل": "Awaiting details", "القادمة": "Upcoming", "المنتهية": "Past", "قادمة": "Upcoming", "مسجّلة": "Recorded",
+"ابحث بالاسم أو الموضوع…": "Search by name or topic…", "بحث": "Search",
+"لا توجد جلسات مسندة إليك بعد — يُسند مسؤول النظام الجلسات إلى المقدمين من لوحة الإدارة.": "No sessions are assigned to you yet — an administrator assigns sessions to presenters from the admin dashboard.",
+"لا توجد جلسات مطابقة.": "No matching sessions.",
+"المكان": "Location", "تحويلة": "Ext.", "في مكتب الموظف": "At employee's office",
+"تقييم الموظف:": "Employee rating:",
+"لم يقيّم الموظف الجلسة بعد.": "The employee has not rated the session yet.",
+"يظهر التقييم بعد انتهاء الجلسة.": "The rating appears after the session ends.",
+"المدة المخططة:": "Planned:", "يمكنك تسجيل مدة الجلسة بعد بدايتها.": "You can record the duration once the session has started.",
+"جلسات قدّمتها": "Sessions delivered", "متوسط تقييمي": "My average rating", "بانتظار تسجيل المدة": "Awaiting duration",
+"سجّل الوقت المستغرق بعد الجلسة": "Record the actual time after each session",
+"جارٍ الحفظ…": "Saving…", "✓ تم الحفظ — يظهر في لوحة الإدارة": "✓ Saved — now visible in the admin dashboard",
+"✓ سجّلها المقدم": "✓ Recorded by presenter",
+"هذه الجلسة غير مسندة إليك.": "This session is not assigned to you.",
+"صفحة «جلساتي» متاحة لمقدمي الجلسات المسجّلين في القائمة فقط.": "«My sessions» is available to listed presenters only.",
+})
+
+# v3.8
+EN.update({
+"إرسال بريد المقدم التجريبي إليّ": "Send me a test presenter e-mail",
+"✉ أُبلغ المقدم": "✉ Presenter notified",
+"بريد المقدم بعد كل جلسة: مفعّل": "Presenter e-mail after each session: on",
+"بريد المقدم موقوف من الإعدادات (PresenterMail)": "Presenter e-mail is off in Settings (PresenterMail)",
+"بريد المقدم يتطلب تفعيل الإرسال التلقائي": "Presenter e-mail needs automatic sending turned on",
+})

@@ -1,4 +1,4 @@
-# Coffee with IT · v3.6
+# Coffee with IT · v3.8
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -19,6 +19,7 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | `apps-script/Code.gs` | Server: slots, bookings, topics, admin API, e-mails, calendar invites, reminders, sign-in log |
 | `apps-script/Index.html` | Booking page (topic dropdown, e-mail auto-filled, departments list) |
 | `apps-script/Rate.html` | Session rating page (`…/exec?page=rate&id=…`): 5-point satisfaction scale + suggestions. Opened from the thank-you e-mail; only the attendee can rate. |
+| `apps-script/My.html` | **«جلساتي»** (`…/exec?page=my`): a presenter's own sessions with details and ratings; records actual duration and notes, which appear in the admin dashboard |
 | `apps-script/Admin.html` | Admin dashboard: KPIs, filters, charts, attendance, cancellation, topic management, **session details (presenter / actual duration / notes)**, **presenters dashboard**, **presenter list**, **admin access management**, CSV export, printable PDF report |
 | `apps-script/appsscript.json` | Manifest (Asia/Riyadh, sr.edu.sa domain) |
 | `assets/` | QR code (PNG/SVG); SRU / ICTD / ITOC logos; **Coffee with IT logo (v3.0)**: `cwit-logo.png` (full bilingual logo, transparent), `cwit-logo-white.png` (on a white card, for dark backgrounds), `cwit-mark.png` (cup only, transparent), `cwit-badge.png` (cup on a white tile — e-mails), `cwit-favicon.png` / `cwit-icon.png` (app icon) |
@@ -40,7 +41,15 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v3.6
+## Updating the live app to v3.8
+
+**From v3.7 → v3.8:** replace **Code.gs**, **Index.html**, **Admin.html**, **Rate.html**, **My.html**, deploy a new version, and upload `index.html`
+to the `coffee` repository. The Bookings column `PresenterMailAt` is added automatically. The presenter e-mail needs the hourly automation
+(admin dashboard › «تفعيل الإرسال التلقائي») and each presenter's e-mail in the Presenters sheet. Optional Settings row: `PresenterMail` = `TRUE`.
+
+**From v3.6 → v3.7:** replace **Code.gs**, **Index.html**, **Admin.html**, **Rate.html**; add a new HTML file **My** and paste `apps-script/My.html`;
+deploy a new version; upload `index.html` to the `coffee` repository. The Bookings columns `DetailsBy` and `DetailsAt` are added automatically.
+**Presenters need their e-mail** in the Presenters sheet (column Email) to open «جلساتي».
 
 **From v3.5 → v3.6:** replace **Code.gs**, **Index.html**, **Rate.html**, **Admin.html**, deploy a new version, and upload `index.html` to the `coffee` repository.
 The Bookings column `Lang` and the Topics column `TopicEn` are added automatically.

@@ -1,7 +1,8 @@
 import re, json, sys
 sys.path.insert(0, '.')
 from en import EN
-ROOT = '/home/claude/src/coffee-v3.6/'
+import os
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..') + '/'
 runtime = open('runtime.js', encoding='utf-8').read().replace('/*EN_DICT*/{}', json.dumps(EN, ensure_ascii=False, separators=(',', ':')))
 theme = open('theme.css', encoding='utf-8').read()
 
@@ -54,5 +55,5 @@ def build(path, extra_css=''):
 
 if __name__ == '__main__':
     for p, extra in [('apps-script/Index.html', ''), ('apps-script/Rate.html', '\nhtml[dir="ltr"] .likert{direction:ltr}\n.lk span{direction:inherit!important}\ntextarea{background:var(--field);color:var(--ink)}\n'),
-                     ('apps-script/Admin.html', '\ndialog.dlg{background:var(--surface)}\nhtml[lang="en"] #bk th:nth-child(5){width:140px!important}\nhtml[lang="en"] #bk th:nth-child(4){width:104px!important}\nhtml[lang="en"] #bk th{white-space:normal}\n'), ('index.html', '')]:
+                     ('apps-script/My.html', '\n.ss.todo{border-inline-start-color:var(--amber)}\n'), ('apps-script/Admin.html', '\ndialog.dlg{background:var(--surface)}\nhtml[lang="en"] #bk th:nth-child(5){width:140px!important}\nhtml[lang="en"] #bk th:nth-child(4){width:104px!important}\nhtml[lang="en"] #bk th{white-space:normal}\n'), ('index.html', '')]:
         build(p, extra); print('built', p)

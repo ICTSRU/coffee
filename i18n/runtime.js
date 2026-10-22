@@ -1,5 +1,7 @@
 /* Coffee with IT · language + theme · v1.0 (app v3.6)
-   - Language: saved choice › ?lang= in the URL › browser language. Theme: saved choice › device setting (follows it live).
+   - Language: Arabic by default on every visit. ?lang=en (e.g. links in English e-mails) or the «English» button switch it;
+     the choice is kept while the browser tab/session stays open (sessionStorage), not across visits.
+     Theme: saved choice › device setting (follows it live).
    - The page markup stays Arabic; this layer translates text nodes and attributes (placeholder, title, aria-label, alt)
      with the EN dictionary and the patterns below, including content rendered later (MutationObserver).
    - Mark any element with data-noi18n to leave it untouched. */
@@ -8,15 +10,18 @@
   var KL = 'cwit.lang', KT = 'cwit.theme';
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function put(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function sput(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+  try { localStorage.removeItem(KL); } catch (e) {}   // v3.6–3.7 remembered the language across visits
   function qp(name) { var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search); return m ? decodeURIComponent(m[1]) : ''; }
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   function sysTheme() { return mq && mq.matches ? 'dark' : 'light'; }
   var urlLang = qp('lang'), urlTheme = qp('theme');
-  if (urlLang === 'ar' || urlLang === 'en') put(KL, urlLang);
+  if (urlLang === 'ar' || urlLang === 'en') sput(KL, urlLang);
   if (urlTheme === 'dark' || urlTheme === 'light') put(KT, urlTheme);
-  var lang = get(KL), theme = get(KT);
+  var lang = sget(KL), theme = get(KT);
   var CWI = window.CWI = {
-    lang: (lang === 'ar' || lang === 'en') ? lang : (/^ar/i.test((navigator.languages && navigator.languages[0]) || navigator.language || 'ar') ? 'ar' : 'en'),
+    lang: (lang === 'ar' || lang === 'en') ? lang : 'ar',
     langSet: lang === 'ar' || lang === 'en',
     theme: (theme === 'dark' || theme === 'light') ? theme : sysTheme(),
     themeSet: theme === 'dark' || theme === 'light',
@@ -77,6 +82,15 @@
     [/^(.+): (\d+) \((\d+)%\)$/, function (m) { return soft(m[1]) + ': ' + m[2] + ' (' + m[3] + '%)'; }],
     [/^(.*) · تحويلة$/, function (m) { return soft(m[1]) + ' · Ext.'; }],
     [/^(حضر|لم يحضر) — (.+)$/, function (m) { return EN[m[1]] + ' — ' + m[2]; }],
+    [/^(\d+) قادمة$/, function (m) { return m[1] + ' upcoming'; }],
+    [/^(\d+) تقييم$/, function (m) { return m[1] + ' ratings'; }],
+    [/^متوسط (\d+) د للجلسة$/, function (m) { return 'Avg. ' + m[1] + ' min per session'; }],
+    [/^المدة المخططة: (\d+) دقائق\.$/, function (m) { return 'Planned length: ' + m[1] + ' minutes.'; }],
+    [/^آخر تحديث: (.+?)(?: · (.+))?$/, function (m) { return 'Last updated: ' + m[1] + (m[2] ? ' · ' + m[2] : ''); }],
+    [/^سجّلها (.+)$/, function (m) { return 'Recorded by ' + m[1]; }],
+    [/^الموظف: $/, function () { return 'Employee: '; }],
+    [/^أُرسل في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
+    [/^أُرسل بريد المقدم التجريبي إلى (.+)\.$/, function (m) { return 'Test presenter e-mail sent to ' + m[1] + '.'; }],
     [/^أُرسلت في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
     [/^إرسال الشكر والتقييم إلى (.+)$/, function (m) { return 'Send thank-you & rating to ' + m[1]; }],
     [/^تفاصيل جلسة (.+)$/, function (m) { return 'Session details — ' + m[1]; }],
@@ -179,7 +193,7 @@
   }
   function fire(what) { CWI.listeners.forEach(function (fn) { try { fn(what); } catch (e) { console.warn(e); } }); }
   CWI.setLang = function (l) {
-    CWI.lang = l === 'en' ? 'en' : 'ar'; CWI.langSet = true; put(KL, CWI.lang);
+    CWI.lang = l === 'en' ? 'en' : 'ar'; CWI.langSet = true; sput(KL, CWI.lang);
     applyRoot(); translateAll(); syncButtons(); fire('lang');
   };
   CWI.setTheme = function (t) {
