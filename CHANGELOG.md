@@ -1,5 +1,28 @@
 # Changelog — Coffee with IT
 
+## v4.2 — 2026-10-28
+- **Admin dashboard layout**: «سجل الحجوزات» now comes right after the top section — indicators, then the filter card (which controls the log),
+  then the bookings log. Presenters, ratings, topics and charts follow below. Printed report unchanged.
+- Hint under «مقدمو الجلسات» now refers to the «✎ تعديل الحجز» button.
+
+## v4.1 — 2026-10-28
+- **Edit every field of a booking from the admin dashboard** — «✎ تعديل الحجز» on every booking (confirmed or cancelled) opens one dialog:
+  - Employee: name, e-mail (@sr.edu.sa), department (official list), extension.
+  - Session: topic (list or typed), date, time, attendance mode (+ building/office number), e-mail language, employee notes.
+  - Follow-up: actual attendance, presenter, actual duration, session notes.
+- Only changed fields are sent and saved (counter «حقول معدّلة» in the dialog). Required fields are checked and highlighted.
+- **Moving a booking**: a new date/time is refused if another confirmed booking already fills that slot. The Google Calendar invitation
+  is moved (time, location, guest when the e-mail changes) and the reminder is re-armed for the new time.
+- **Optional e-mail to the employee** with the updated details («تم تحديث حجزك», in the booking's language). Ticked automatically when
+  date, time or attendance mode change; can be unticked.
+- **Change trail**: new Bookings columns `EditedBy`, `EditedAt`, `EditLog` (one line per save: time, admin, fields changed).
+  The bookings log shows «✎ عُدّل …» under the booking number (hover for the history); the dialog shows «سجل التعديلات».
+- The Ratings sheet is kept in step (name, e-mail, department, topic, date, time, mode). «جلساتي» shows the new data automatically.
+
+## v4.0 — 2026-10-22
+- **Admin dashboard layout**: «قائمة مقدمي الجلسات» and «صلاحيات الدخول على لوحة الإدارة» moved to the end of the page, after «سجل الحجوزات».
+  Nothing else changed (still hidden in the printed report).
+
 ## v3.9 — 2026-10-22
 - **Smaller ITOC logo in the footer** — the ITOC badge now has exactly the same height as the «For Support» box and sits on the same line
   (logo 32 px, was 40–46 px) on every page: booking, rating, «جلساتي», admin dashboard and the GitHub sign-in page.

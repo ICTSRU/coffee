@@ -1,4 +1,4 @@
-# Coffee with IT · v3.9
+# Coffee with IT · v4.2
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -41,7 +41,15 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v3.9
+## Updating the live app to v4.2
+
+**From v4.1 → v4.2:** replace **Admin.html** (other files: version number only), deploy a new version. Layout change only.
+Still on v3.9/v4.0? Apply v4.1 first (Code.gs + Admin.html) — or simply replace all files from this folder.
+
+**From v4.0 → v4.1:** replace **Code.gs** and **Admin.html** (other pages: version number only), deploy a new version.
+The Bookings columns `EditedBy`, `EditedAt`, `EditLog` are added automatically.
+
+**From v3.9 → v4.0:** replace **Admin.html** (and **Code.gs** / the other pages for the version number), deploy a new version. Layout change only.
 
 **From v3.8 → v3.9:** replace **Index.html**, **Admin.html**, **Rate.html**, **My.html** (and **Code.gs** for the version number), deploy a new version,
 and upload `index.html` to the `coffee` repository. Visual change only.

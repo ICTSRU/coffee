@@ -279,3 +279,23 @@ EN.update({
 "بريد المقدم موقوف من الإعدادات (PresenterMail)": "Presenter e-mail is off in Settings (PresenterMail)",
 "بريد المقدم يتطلب تفعيل الإرسال التلقائي": "Presenter e-mail needs automatic sending turned on",
 })
+
+# v4.1 — full booking edit
+EN.update({
+"تعديل الحجز": "Edit booking", "✎ تعديل الحجز": "✎ Edit booking",
+"بيانات الموظف": "Employee details", "بيانات الجلسة": "Session details", "متابعة الجلسة": "Session follow-up",
+"البريد الإلكتروني": "E-mail", "اختر الإدارة…": "Choose the department…", "لغة الرسائل": "E-mail language",
+"العربية": "Arabic", "English": "English", "رقم المبنى": "Building no.", "رقم المكتب": "Office no.",
+"اكتب الموضوع": "Type the topic", "✎ موضوع آخر (اكتبه)…": "✎ Another topic (type it)…",
+"إرسال بريد للموظف بالبيانات المحدّثة": "E-mail the employee the updated details",
+"سجل التعديلات": "Edit history", "حفظ التعديلات": "Save changes", "لم تتغير أي بيانات.": "Nothing changed.",
+"اكتب اسم الموظف.": "Type the employee's name.", "اختر الإدارة.": "Choose the department.",
+"اختر موضوع الجلسة أو اكتبه.": "Choose or type the session topic.", "أدخل تاريخًا ووقتًا صحيحين.": "Enter a valid date and time.",
+"أدخل رقم المبنى ورقم المكتب للجلسة في مكتب الموظف.": "Enter the building and office number for a session at the employee's office.",
+"هذا الموعد محجوز لحجز آخر — اختر وقتًا مختلفًا.": "This slot is taken by another booking — choose a different time.",
+"أُرسل بريد للموظف بالبيانات المحدّثة.": "The employee was e-mailed the updated details.",
+"الاسم": "Name", "التاريخ": "Date", "الوقت": "Time", "اللغة": "Language", "مكان المكتب": "Office location",
+"ملاحظات الموظف": "Employee notes", "ملاحظات الجلسة": "Session notes", "الوقت المستغرق": "Duration", "الإدارة": "Department", "التحويلة": "Extension",
+})
+
+EN.update({"لم تُسند جلسات لمقدمين بعد — استخدم «✎ تعديل الحجز» في سجل الحجوزات.": "No sessions assigned to presenters yet — use “✎ Edit booking” in the bookings log."})

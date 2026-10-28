@@ -89,6 +89,12 @@
     [/^آخر تحديث: (.+?)(?: · (.+))?$/, function (m) { return 'Last updated: ' + m[1] + (m[2] ? ' · ' + m[2] : ''); }],
     [/^سجّلها (.+)$/, function (m) { return 'Recorded by ' + m[1]; }],
     [/^الموظف: $/, function () { return 'Employee: '; }],
+    [/^✎ عُدّل (.+)$/, function (m) { return '✎ Edited ' + m[1]; }],
+    [/^حقول معدّلة: (\d+)$/, function (m) { return 'Changed fields: ' + m[1]; }],
+    [/^تعديل حجز (.+)$/, function (m) { return 'Edit booking — ' + m[1]; }],
+    [/^(.+) · (\S+) · (CWI-\S+) · ملغى$/, function (m) { return dates(m[1]) + ' · ' + m[2] + ' · ' + m[3] + ' · cancelled'; }],
+    [/^تم حفظ تعديلات حجز (.+?)(?: \((.+)\))?\.( أُرسل بريد للموظف بالبيانات المحدّثة\.)?$/, function (m) {
+      return 'Changes saved for ' + m[1] + (m[2] ? ' (' + m[2].split('، ').map(function (x) { return EN[x] || x; }).join(', ') + ')' : '') + '.' + (m[3] ? ' The employee was e-mailed the updated details.' : ''); }],
     [/^أُرسل في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
     [/^أُرسل بريد المقدم التجريبي إلى (.+)\.$/, function (m) { return 'Test presenter e-mail sent to ' + m[1] + '.'; }],
     [/^أُرسلت في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
