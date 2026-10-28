@@ -1,5 +1,23 @@
 # Changelog — Coffee with IT
 
+## v4.4 — 2026-10-28
+- **E-mail preview in the admin dashboard** — new header button «✉ معاينة الرسائل» opens a window that renders any e-mail exactly as the
+  system sends it (same templates, embedded logos), with sample data:
+  confirmation, booking update, cancellation, reminder, thank-you + rating, presenter e-mail.
+  - Language: العربية / English (the presenter e-mail is Arabic only).
+  - Attendance mode: on-site / employee's office / Zoom (for confirmation, update and reminder).
+  - View: desktop / phone width.
+  - Header details: subject, sender, recipient, reply-to and BCC list as configured in Settings.
+  - «✉ إرسال هذه الرسالة إليّ» sends that exact e-mail to the signed-in admin only (subject prefixed «[معاينة]», no BCC) —
+    the way to check it in Outlook or on a phone.
+- New server functions `getEmailPreview`, `sendEmailPreview` (admins only). No change to the sent e-mails themselves.
+
+## v4.3 — 2026-10-28
+- **E-mails: white vertical lines in the coloured header removed (Outlook for Windows).** The header was a full-width table nested inside a
+  padded cell; Outlook leaves a 1 px seam at the edge of such a table. The header is now flattened — the icon/label line, the title and the
+  subtitle are each a full-width cell of the main table, all with `bgcolor`. Same fix applied to the lilac footer. Applies to every e-mail
+  (confirmation, update, cancellation, reminder, thank-you + rating, presenter). Look unchanged otherwise.
+
 ## v4.2 — 2026-10-28
 - **Admin dashboard layout**: «سجل الحجوزات» now comes right after the top section — indicators, then the filter card (which controls the log),
   then the bookings log. Presenters, ratings, topics and charts follow below. Printed report unchanged.
