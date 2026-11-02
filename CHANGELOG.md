@@ -1,5 +1,13 @@
 # Changelog — Coffee with IT
 
+## v4.6 — 2026-11-02
+- **Fix: slots every 30 minutes again.** v4.5 lined slots up on the Settings › `SlotMinutes` grid; where that value was 60, the half-hour slots
+  were switched off and the booking page showed one slot per hour. One-time automatic fix on the first load after deploying:
+  `SlotMinutes` = 30, and for every upcoming day that has slots, an active slot every 30 minutes between that day's first and last slot
+  (switched-off ones re-opened, missing ones added). Bookings untouched; a slot is still shown as taken only when a session overlaps it.
+- The v4.5 grid check now follows the session length (30), not `SlotMinutes`.
+- Menu item «إتاحة المواعيد كل نصف ساعة (إعادة فتح وإضافة المواعيد الناقصة)» runs the fix again on demand.
+
 ## v4.5 — 2026-11-02
 - **Compact e-mail header (approved design)** — the coloured band is about a third of its old height (≈60 px, was 177 px) and everything sits
   on one row across the full width: icon · title and date · «Coffee with IT / 30 دقيقة». Mirrored automatically in English e-mails.

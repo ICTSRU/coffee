@@ -1,4 +1,4 @@
-# Coffee with IT · v4.5
+# Coffee with IT · v4.6
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
@@ -41,7 +41,11 @@ Booking system for the 30-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v4.5
+## Updating the live app to v4.6
+
+**From v4.5 → v4.6:** replace **Code.gs** (other files: version number only), deploy a new version, then open the booking page or the
+admin dashboard once — slots become available every 30 minutes automatically. If needed, run the sheet menu item
+«إتاحة المواعيد كل نصف ساعة». Slots you had switched off by hand inside the day's range are re-opened too; switch them off again in Slots.
 
 **From v4.4 → v4.5:** replace **Code.gs**, **Index.html**, **Admin.html**, **My.html**, **Rate.html**, deploy a new version, and upload `index.html`
 to the `coffee` repository. Then open the admin dashboard once: Settings switch to 30-minute sessions and overlapping empty slots are closed
