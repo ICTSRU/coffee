@@ -299,3 +299,23 @@ EN.update({
 })
 
 EN.update({"لم تُسند جلسات لمقدمين بعد — استخدم «✎ تعديل الحجز» في سجل الحجوزات.": "No sessions assigned to presenters yet — use “✎ Edit booking” in the bookings log."})
+
+# v4.4 — e-mail preview
+EN.update({
+"✉ معاينة الرسائل": "✉ Preview e-mails", "معاينة رسائل البريد": "E-mail preview", "كما تصل إلى صندوق البريد — ببيانات تجريبية": "As delivered to the inbox — with sample data",
+"الرسالة": "Message", "تأكيد الحجز": "Booking confirmation", "تحديث الحجز": "Booking update", "إلغاء الحجز": "Booking cancellation",
+"التذكير قبل الجلسة": "Reminder before the session", "الشكر والتقييم": "Thank-you & rating", "بريد مقدم الجلسة": "Presenter e-mail",
+"العرض": "View", "سطح المكتب": "Desktop", "الجوال": "Phone", "جارٍ تجهيز المعاينة…": "Preparing the preview…", "معاينة الرسالة": "Message preview",
+"✉ إرسال هذه الرسالة إليّ": "✉ Send this e-mail to me", "إغلاق": "Close",
+"من": "From", "إلى": "To", "الرد إلى": "Reply-to", "نسخة مخفية": "BCC",
+"الموظف صاحب الحجز": "The employee who booked", "مقدم الجلسة": "Presenter",
+"بريد المقدم يُرسل بالعربية دائمًا.": "The presenter e-mail is always sent in Arabic.",
+})
+
+# v4.5 — 30-minute sessions
+EN.update({
+"دقيقة": "minutes", "مدة الجلسة 30 دقيقة": "Session length: 30 minutes",
+"30 دقيقة فقط — حضوريًا في تقنية المعلومات أو في مكتبك أو عن بُعد عبر": "Just 30 minutes — in person at IT, at your office, or remotely via",
+"مدة الجلسة المخططة: 30 دقيقة. اتركه فارغًا إن لم تُعقد الجلسة.": "Planned session length: 30 minutes. Leave empty if the session did not take place.",
+"مثال: 30": "e.g. 30",
+})

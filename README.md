@@ -1,8 +1,8 @@
-# Coffee with IT · v4.4
+# Coffee with IT · v4.5
 
 **Sulaiman Al Rajhi University · ICTD · IT Operations Center (ITOC)**
 
-Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **topic**, **date**, **time** and **attendance mode** (in person at IT / remote via Zoom). Administrators follow up on all bookings and produce reports from the admin dashboard.
+Booking system for the 30-minute **Coffee with IT** sessions. Staff choose a **topic**, **date**, **time** and **attendance mode** (in person at IT / remote via Zoom). Administrators follow up on all bookings and produce reports from the admin dashboard.
 
 | | Link |
 |---|---|
@@ -41,7 +41,12 @@ Booking system for the 10-minute **Coffee with IT** sessions. Staff choose a **t
 | SignIns | Email, Date, Time for each visit |
 | Ratings | **Created automatically.** One row per rated booking: Timestamp, BookingId, Email, Name, Department, Topic, SessionDate, SessionTime, Mode, Rating (1–5), Comment, UpdatedAt |
 
-## Updating the live app to v4.4
+## Updating the live app to v4.5
+
+**From v4.4 → v4.5:** replace **Code.gs**, **Index.html**, **Admin.html**, **My.html**, **Rate.html**, deploy a new version, and upload `index.html`
+to the `coffee` repository. Then open the admin dashboard once: Settings switch to 30-minute sessions and overlapping empty slots are closed
+automatically (check the Settings and Slots sheets). Run «توليد المواعيد من الإعدادات» to add slots for new dates at 30-minute steps.
+The posters in `posters/` still show «10 دقائق» and must be re-exported.
 
 **From v4.3 → v4.4:** replace **Code.gs** and **Admin.html** (other files: version number only), deploy a new version.
 

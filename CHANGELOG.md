@@ -1,5 +1,21 @@
 # Changelog — Coffee with IT
 
+## v4.5 — 2026-11-02
+- **Compact e-mail header (approved design)** — the coloured band is about a third of its old height (≈60 px, was 177 px) and everything sits
+  on one row across the full width: icon · title and date · «Coffee with IT / 30 دقيقة». Mirrored automatically in English e-mails.
+  Applies to every e-mail and keeps each type's colour. The inner badge box was removed, and the only table in the header now sits flush
+  with its cell, so Outlook has no edge to draw a white line on.
+- **Sessions are now 30 minutes** across the whole platform:
+  - Default `SessionMinutes` = 30 and `SlotMinutes` = 30. **One-time automatic update** on the first load after deploying:
+    Settings 10 → 30 and 15 → 30, and future empty slots that are off the 30-minute grid (e.g. 10:15, 10:45) are switched off.
+    Existing bookings are kept. Menu item «ضبط مدة الجلسة على 30 دقيقة وإغلاق المواعيد المتداخلة» runs it again on demand.
+  - **Overlap protection**: a slot is unavailable when any confirmed session overlaps it — on the booking page, when booking,
+    and when an admin moves a booking. Slot generation never spaces slots closer than one session.
+  - Wording everywhere follows Settings: booking page badge and times («30 دقيقة»), end times, e-mails (duration row, header label,
+    calendar text), admin and «جلساتي» planned length; quick duration buttons 30/15/20/45/60.
+  - GitHub sign-in page: «30 دقيقة فقط — حضوريًا في تقنية المعلومات أو في مكتبك أو عن بُعد عبر Zoom».
+- Note: the awareness posters (`posters/`) still say «10 دقائق فقط» inside the images — they need to be re-exported.
+
 ## v4.4 — 2026-10-28
 - **E-mail preview in the admin dashboard** — new header button «✉ معاينة الرسائل» opens a window that renders any e-mail exactly as the
   system sends it (same templates, embedded logos), with sample data:

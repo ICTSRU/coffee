@@ -54,7 +54,7 @@
   var PAT = [
     [/^من (\d\d:\d\d) إلى (\d\d:\d\d)$/, function (m) { return 'From ' + m[1] + ' to ' + m[2]; }],
     [/^(.+) · من (\d\d:\d\d) إلى (\d\d:\d\d)$/, function (m) { return dates(m[1]) + ' · ' + m[2] + '–' + m[3]; }],
-    [/^المواعيد المتاحة يوم (.+) \(مدة الجلسة (\d+) دقائق\)$/, function (m) { return 'Available times on ' + dates(m[1]) + ' (' + m[2] + '-minute session)'; }],
+    [/^المواعيد المتاحة يوم (.+) \(مدة الجلسة (\d+) (?:دقائق|دقيقة)\)$/, function (m) { return 'Available times on ' + dates(m[1]) + ' (' + m[2] + '-minute session)'; }],
     [/^(.+) — مكتمل$/, function (m) { return dates(m[1]) + ' — full'; }],
     [/^(\d\d:\d\d) محجوز$/, function (m) { return m[1] + ' booked'; }],
     [/^(.+) \(مبنى (.+) — مكتب (.*)\)$/, function (m) { return soft(m[1]) + ' (Building ' + m[2] + ' — Office ' + m[3] + ')'; }],
@@ -85,7 +85,7 @@
     [/^(\d+) قادمة$/, function (m) { return m[1] + ' upcoming'; }],
     [/^(\d+) تقييم$/, function (m) { return m[1] + ' ratings'; }],
     [/^متوسط (\d+) د للجلسة$/, function (m) { return 'Avg. ' + m[1] + ' min per session'; }],
-    [/^المدة المخططة: (\d+) دقائق\.$/, function (m) { return 'Planned length: ' + m[1] + ' minutes.'; }],
+    [/^المدة المخططة: (\d+) (?:دقائق|دقيقة)\.$/, function (m) { return 'Planned length: ' + m[1] + ' minutes.'; }],
     [/^آخر تحديث: (.+?)(?: · (.+))?$/, function (m) { return 'Last updated: ' + m[1] + (m[2] ? ' · ' + m[2] : ''); }],
     [/^سجّلها (.+)$/, function (m) { return 'Recorded by ' + m[1]; }],
     [/^الموظف: $/, function () { return 'Employee: '; }],
@@ -95,6 +95,9 @@
     [/^(.+) · (\S+) · (CWI-\S+) · ملغى$/, function (m) { return dates(m[1]) + ' · ' + m[2] + ' · ' + m[3] + ' · cancelled'; }],
     [/^تم حفظ تعديلات حجز (.+?)(?: \((.+)\))?\.( أُرسل بريد للموظف بالبيانات المحدّثة\.)?$/, function (m) {
       return 'Changes saved for ' + m[1] + (m[2] ? ' (' + m[2].split('، ').map(function (x) { return EN[x] || x; }).join(', ') + ')' : '') + '.' + (m[3] ? ' The employee was e-mailed the updated details.' : ''); }],
+    [/^أُرسلت المعاينة إلى (\S+)(?: من (\S+))?\.$/, function (m) { return 'Preview sent to ' + m[1] + (m[2] ? ' from ' + m[2] : '') + '.'; }],
+    [/^مدة الجلسة (\d+) (?:دقائق|دقيقة)$/, function (m) { return 'Session length: ' + m[1] + ' minutes'; }],
+    [/^مدة الجلسة المخططة: (\d+) (?:دقائق|دقيقة)\. اتركه فارغًا إن لم تُعقد الجلسة\.$/, function (m) { return 'Planned session length: ' + m[1] + ' minutes. Leave empty if the session did not take place.'; }],
     [/^أُرسل في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
     [/^أُرسل بريد المقدم التجريبي إلى (.+)\.$/, function (m) { return 'Test presenter e-mail sent to ' + m[1] + '.'; }],
     [/^أُرسلت في (.+)$/, function (m) { return 'Sent on ' + m[1]; }],
